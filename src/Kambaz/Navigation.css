@@ -1,0 +1,55 @@
+#wd-kambaz-navigation.sidebar-list {
+    min-height: 100vh;
+    background: #000;
+    border-right: 1px solid #222;
+    padding-top: 0;
+  }
+  
+  .sidebar-item {
+    padding: 18px 0 6px 0;
+    font-size: 0.95rem;
+    transition: background 0.2s, color 0.2s;
+  }
+  
+  .sidebar-item .sidebar-label {
+    font-size: 0.85rem;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+  
+  .sidebar-item:hover {
+    background: #fff !important;
+    color: #d32f2f !important;
+  }
+  
+  .sidebar-item:hover .sidebar-label,
+  .sidebar-item:hover svg {
+    color: #d32f2f !important;
+  }
+  
+  .sidebar-item svg {
+    display: block;
+    margin: 0 auto 2px auto;
+    color: #fff;
+  }
+  
+  .neu-logo-item {
+    padding: 20px 0 10px 0;
+    border-bottom: 1px solid #222;
+    background: #000 !important;
+  }
+
+  .main-content {
+    margin-left: 110px;
+  }
+
+  /* NavLink 激活状态样式 */
+  .sidebar-item.active {
+    background: #fff !important;
+    color: #d32f2f !important;
+  }
+
+  .sidebar-item.active .sidebar-label,
+  .sidebar-item.active svg {
+    color: #d32f2f !important;
+  }
