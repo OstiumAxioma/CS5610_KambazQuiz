@@ -36,18 +36,9 @@ export default function Signin() {
               <Button
                 id="wd-signup-link"
                 variant="outline-secondary"
-                className="w-100 mb-2"
-              >
-                Sign up
-              </Button>
-            </Link>
-            <Link to="/Labs/Lab1" className="text-decoration-none">
-              <Button
-                id="wd-signup-link"
-                variant="outline-info"
                 className="w-100"
               >
-                Go To Labs Exercises
+                Sign up
               </Button>
             </Link>
           </div>
