@@ -5,6 +5,8 @@ import Home from "./Home";
 import Assignments from "./Assignments";
 import AssignmentEditor from "./Assignments/editor";
 import EditAssignment from "./Assignments/EditAssignment";
+import Quizs from "./Quizs";
+import EditQuiz from "./Quizs/EditQuiz";
 import { FaAlignJustify } from "react-icons/fa";
 import PeopleTable from "./People/Table";
 import Breadcrumb from "./Breadcrumb";
@@ -89,6 +91,9 @@ export default function Courses() {
             <Route path="Assignments/:aid" element={<AssignmentEditor />} />
             <Route path="Assignments/:aid/edit" element={<EditAssignment />} />
             <Route path="Assignments/new/edit" element={<EditAssignment />} />
+            <Route path="Quizs" element={<Quizs />} />
+            <Route path="Quizs/:qid/edit" element={<EditQuiz />} />
+            <Route path="Quizs/new/edit" element={<EditQuiz />} />
             <Route path="People" element={<PeopleTable />} />
           </Routes>
         </div>

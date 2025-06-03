@@ -11,7 +11,7 @@ export default function CourseNavigation() {
     { label: "Piazza", path: `/Kambaz/Courses/${cid}/Piazza`, icon: FaPencilAlt },
     { label: "Zoom", path: `/Kambaz/Courses/${cid}/Zoom`, icon: FaVideo },
     { label: "Assignments", path: `/Kambaz/Courses/${cid}/Assignments`, icon: FaClipboardList },
-    { label: "Quizzes", path: `/Kambaz/Courses/${cid}/Quizzes`, icon: FaQuestionCircle },
+    { label: "Quizzes", path: `/Kambaz/Courses/${cid}/Quizs`, icon: FaQuestionCircle },
     { label: "Grades", path: `/Kambaz/Courses/${cid}/Grades`, icon: FaChartBar },
     { label: "People", path: `/Kambaz/Courses/${cid}/People`, icon: FaUsers }
   ];

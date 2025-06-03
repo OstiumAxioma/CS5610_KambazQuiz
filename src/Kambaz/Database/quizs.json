@@ -1,0 +1,58 @@
+[
+  { 
+    "_id": "Q101", 
+    "title": "Rocket Propulsion Quiz", 
+    "course": "RS101",
+    "description": "Test your knowledge of rocket propulsion systems",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59:00",
+    "availableFrom": "2024-05-06T00:00:00",
+    "availableUntil": "2024-05-20T23:59:00",
+    "published": false,
+    "questions": 10,
+    "timeLimit": 60,
+    "attempts": 1
+  },
+  { 
+    "_id": "Q102", 
+    "title": "Combustion Theory Assessment", 
+    "course": "RS101",
+    "description": "Assessment on combustion principles and applications",
+    "points": 75,
+    "dueDate": "2024-05-15T23:59:00",
+    "availableFrom": "2024-05-01T00:00:00",
+    "availableUntil": "2024-05-15T23:59:00",
+    "published": true,
+    "questions": 8,
+    "timeLimit": 45,
+    "attempts": 2
+  },
+  { 
+    "_id": "Q201", 
+    "title": "Aerodynamics Fundamentals", 
+    "course": "RS102",
+    "description": "Basic principles of aerodynamics and fluid flow",
+    "points": 120,
+    "dueDate": "2024-05-25T23:59:00",
+    "availableFrom": "2024-05-10T00:00:00",
+    "availableUntil": "2024-05-25T23:59:00",
+    "published": true,
+    "questions": 12,
+    "timeLimit": 90,
+    "attempts": 1
+  },
+  { 
+    "_id": "Q301", 
+    "title": "Spacecraft Design Challenge", 
+    "course": "RS103",
+    "description": "Comprehensive quiz on spacecraft design principles",
+    "points": 150,
+    "dueDate": "2024-05-30T23:59:00",
+    "availableFrom": "2024-05-15T00:00:00",
+    "availableUntil": "2024-05-30T23:59:00",
+    "published": false,
+    "questions": 15,
+    "timeLimit": 120,
+    "attempts": 3
+  }
+] 
