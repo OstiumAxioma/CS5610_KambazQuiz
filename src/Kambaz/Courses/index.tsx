@@ -7,6 +7,9 @@ import AssignmentEditor from "./Assignments/editor";
 import EditAssignment from "./Assignments/EditAssignment";
 import Quizs from "./Quizs";
 import EditQuiz from "./Quizs/EditQuiz";
+import PreviewQuiz from "./Quizs/PreviewQuiz";
+import QuestionsEditor from "./Quizs/QuestionsEditor";
+import QuizDetail from "./Quizs/QuizDetail";
 import { FaAlignJustify } from "react-icons/fa";
 import PeopleTable from "./People/Table";
 import Breadcrumb from "./Breadcrumb";
@@ -92,7 +95,10 @@ export default function Courses() {
             <Route path="Assignments/:aid/edit" element={<EditAssignment />} />
             <Route path="Assignments/new/edit" element={<EditAssignment />} />
             <Route path="Quizs" element={<Quizs />} />
+            <Route path="Quizs/:qid" element={<QuizDetail />} />
             <Route path="Quizs/:qid/edit" element={<EditQuiz />} />
+            <Route path="Quizs/:qid/preview" element={<PreviewQuiz />} />
+            <Route path="Quizs/:qid/questions" element={<QuestionsEditor />} />
             <Route path="Quizs/new/edit" element={<EditQuiz />} />
             <Route path="People" element={<PeopleTable />} />
           </Routes>
@@ -101,4 +107,3 @@ export default function Courses() {
     </div>
   );
 }
-//Test git change

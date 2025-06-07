@@ -27,7 +27,14 @@ export default function Quizs() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { quizs } = useSelector((state: any) => state.quizsReducer);
-  const courseQuizs = quizs.filter((quiz: Quiz) => quiz.course === cid);
+  const { quizAttempts } = useSelector((state: any) => state.quizAttemptsReducer);
+  
+  const courseQuizs = quizs.filter((quiz: Quiz) => {
+    if (currentUser?.role === "STUDENT") {
+      return quiz.course === cid && quiz.published === true;
+    }
+    return quiz.course === cid;
+  });
   
   // State for delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -147,7 +154,7 @@ export default function Quizs() {
                   <div className="flex-grow-1">
                     <div className="fw-bold fs-5">
                       {canEdit ? (
-                        <Link to={`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/edit`} className="text-decoration-none text-dark">
+                        <Link to={`/Kambaz/Courses/${cid}/Quizs/${quiz._id}`} className="text-decoration-none text-dark">
                           {quiz.title}
                         </Link>
                       ) : (
@@ -164,14 +171,19 @@ export default function Quizs() {
                     <div className="text-muted small">
                       {formatDueDate(quiz.dueDate)} | {quiz.points || 100} pts | {quiz.questions || 0} Questions
                     </div>
-                    {currentUser?.role === "STUDENT" && (
+                    {currentUser?.role === "STUDENT" && quiz.published && (
                       <div className="text-muted small">
-                        Last attempt score: -- / {quiz.points || 100}
+                        Last attempt score: {
+                          quizAttempts.filter((a: any) => a.quiz === quiz._id && a.user === currentUser._id && a.endTime).length > 0 
+                            ? `${quizAttempts.filter((a: any) => a.quiz === quiz._id && a.user === currentUser._id)
+                                .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())[0].score} / ${quiz.points || 100}`
+                            : `-- / ${quiz.points || 100}`
+                        }
                       </div>
                     )}
                   </div>
                   <div className="d-flex align-items-center gap-2">
-                    {canEdit && (
+                    {canEdit ? (
                       <Dropdown>
                         <Dropdown.Toggle variant="light" size="sm" id={`dropdown-${quiz._id}`}>
                           <FaEllipsisV />
@@ -179,6 +191,9 @@ export default function Quizs() {
                         <Dropdown.Menu>
                           <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/edit`)}>
                             <FaEdit className="me-2" /> Edit
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/preview`)}>
+                            <FaCheckCircle className="me-2" /> Preview
                           </Dropdown.Item>
                           <Dropdown.Item onClick={() => handleDeleteQuiz(quiz)}>
                             <FaTrash className="me-2" /> Delete
@@ -196,6 +211,16 @@ export default function Quizs() {
                           </Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
+                    ) : (
+                      quiz.published && (
+                        <Button 
+                          variant="primary" 
+                          size="sm"
+                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/preview`)}
+                        >
+                          Take Quiz
+                        </Button>
+                      )
                     )}
                     <div className="ms-2">
                       {quiz.published ? (
@@ -244,4 +269,4 @@ export default function Quizs() {
       </Modal>
     </div>
   );
-} 
+}

@@ -11,7 +11,40 @@
     "published": false,
     "questions": 10,
     "timeLimit": 60,
-    "attempts": 1
+    "attempts": 1,
+    "questionList": [
+      {
+        "_id": "1",
+        "type": "multiple_choice",
+        "title": "Basic Rocket Engine Types",
+        "questionText": "Which of the following is NOT a type of chemical rocket engine?",
+        "points": 10,
+        "options": [
+          { "id": "option1", "text": "Solid rocket engine" },
+          { "id": "option2", "text": "Liquid rocket engine" },
+          { "id": "option3", "text": "Hybrid rocket engine" },
+          { "id": "option4", "text": "Quantum rocket engine" }
+        ],
+        "correctOption": "option4"
+      },
+      {
+        "_id": "2",
+        "type": "true_false",
+        "title": "Rocket Fuel Facts",
+        "questionText": "Liquid hydrogen is commonly used as a fuel in modern rocket engines.",
+        "points": 10,
+        "correctAnswer": true
+      },
+      {
+        "_id": "3",
+        "type": "fill_in_blank",
+        "title": "Rocket Propulsion Terminology",
+        "questionText": "The force that propels a rocket forward is called _______.",
+        "points": 10,
+        "possibleAnswers": ["thrust", "rocket thrust"]
+      }
+    ],
+    "shuffleAnswers": true
   },
   { 
     "_id": "Q102", 
@@ -25,7 +58,32 @@
     "published": true,
     "questions": 8,
     "timeLimit": 45,
-    "attempts": 2
+    "attempts": 2,
+    "questionList": [
+      {
+        "_id": "1",
+        "type": "multiple_choice",
+        "title": "Combustion Types",
+        "questionText": "Which of the following is a characteristic of complete combustion?",
+        "points": 10,
+        "options": [
+          { "id": "option1", "text": "Production of carbon monoxide" },
+          { "id": "option2", "text": "Insufficient oxygen supply" },
+          { "id": "option3", "text": "Production of carbon dioxide and water" },
+          { "id": "option4", "text": "Yellow flame color" }
+        ],
+        "correctOption": "option3"
+      },
+      {
+        "_id": "2",
+        "type": "true_false",
+        "title": "Combustion Facts",
+        "questionText": "Combustion is an endothermic reaction.",
+        "points": 10,
+        "correctAnswer": false
+      }
+    ],
+    "shuffleAnswers": true
   },
   { 
     "_id": "Q201", 
@@ -39,7 +97,8 @@
     "published": true,
     "questions": 12,
     "timeLimit": 90,
-    "attempts": 1
+    "attempts": 1,
+    "questionList": []
   },
   { 
     "_id": "Q301", 
@@ -53,6 +112,7 @@
     "published": false,
     "questions": 15,
     "timeLimit": 120,
-    "attempts": 3
+    "attempts": 3,
+    "questionList": []
   }
-] 
+]

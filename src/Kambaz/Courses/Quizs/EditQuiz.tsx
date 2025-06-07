@@ -66,7 +66,7 @@ export default function EditQuiz() {
         attempts: foundQuiz.attempts || 1
       });
     } else if (isNewQuiz) {
-      // Initialize new quiz
+
       setFormData({
         title: "New Quiz",
         description: "",
@@ -129,7 +129,7 @@ export default function EditQuiz() {
       dispatch(addQuiz(newQuiz));
       setSaveMessage("Quiz created successfully!");
     } else {
-      // Update existing quiz
+
       const updatedQuiz = {
         _id: qid!,
         title: formData.title,
@@ -153,7 +153,6 @@ export default function EditQuiz() {
     }, 1500);
   };
 
-  // Redirect if no edit permissions
   if (!canEdit) {
     return <Navigate to={`/Kambaz/Courses/${cid}/Quizs`} />;
   }
@@ -171,6 +170,10 @@ export default function EditQuiz() {
             <Button variant="secondary" className="me-2">Cancel</Button>
           </Link>
           <Button variant="primary" onClick={handleSave}>Save</Button>
+          <Button variant="success" className="ms-2" onClick={() => {
+            handleSave();
+            dispatch(updateQuiz({...quiz, published: true}));
+          }}>Save & Publish</Button>
         </div>
       </div>
 
@@ -179,6 +182,25 @@ export default function EditQuiz() {
           {saveMessage}
         </Alert>
       )}
+
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <Link 
+            className="nav-link active" 
+            to={`/Kambaz/Courses/${cid}/Quizs/${qid}/edit`}
+          >
+            Details
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link 
+            className="nav-link" 
+            to={`/Kambaz/Courses/${cid}/Quizs/${qid}/questions`}
+          >
+            Questions
+          </Link>
+        </li>
+      </ul>
 
       <Form>
         <Form.Group className="mb-3" controlId="quizName">
@@ -326,4 +348,4 @@ export default function EditQuiz() {
       </Form>
     </div>
   );
-} 
+}

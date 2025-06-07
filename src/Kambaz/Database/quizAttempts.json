@@ -1,0 +1,29 @@
+[
+  {
+    "_id": "QA101",
+    "quiz": "Q101",
+    "user": "234",
+    "startTime": "2024-05-10T10:00:00",
+    "endTime": "2024-05-10T10:45:00",
+    "score": 80,
+    "totalPoints": 100,
+    "answers": [
+      {
+        "questionId": "1",
+        "userAnswer": "option2",
+        "isCorrect": true
+      },
+      {
+        "questionId": "2",
+        "userAnswer": "false",
+        "isCorrect": false
+      },
+      {
+        "questionId": "3",
+        "userAnswer": "rocket propulsion",
+        "isCorrect": true
+      }
+    ],
+    "attemptNumber": 1
+  }
+]
