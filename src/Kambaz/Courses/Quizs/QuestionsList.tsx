@@ -1,0 +1,218 @@
+import { useState } from "react";
+import { Button, Card, ListGroup, Badge, Modal } from "react-bootstrap";
+import { FaPlus, FaEdit, FaTrash, FaQuestionCircle } from "react-icons/fa";
+import { useSelector, useDispatch } from "react-redux";
+import { addQuestion, deleteQuestion, updateQuestion } from "./reducer";
+import QuestionEditor from "./QuestionEditor";
+
+interface Question {
+  _id?: string;
+  quizId: string;
+  type: "multiple-choice" | "true-false" | "fill-blank";
+  title: string;
+  points: number;
+  question: string;
+  choices?: { text: string; correct: boolean }[];
+  correctAnswer?: boolean;
+  possibleAnswers?: string[];
+}
+
+interface QuestionsListProps {
+  quizId: string;
+}
+
+export default function QuestionsList({ quizId }: QuestionsListProps) {
+  const dispatch = useDispatch();
+  const { questions } = useSelector((state: any) => state.quizsReducer);
+  const quizQuestions = questions.filter((q: Question) => q.quizId === quizId);
+  
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+
+  const totalPoints = quizQuestions.reduce((sum: number, q: Question) => sum + q.points, 0);
+
+  const handleAddQuestion = () => {
+    setEditingQuestion(undefined);
+    setShowEditor(true);
+  };
+
+  const handleEditQuestion = (question: Question) => {
+    setEditingQuestion(question);
+    setShowEditor(true);
+  };
+
+  const handleSaveQuestion = (question: Question) => {
+    if (question._id && editingQuestion) {
+      // Update existing question
+      dispatch(updateQuestion(question));
+    } else {
+      // Add new question
+      dispatch(addQuestion(question));
+    }
+    setShowEditor(false);
+    setEditingQuestion(undefined);
+  };
+
+  const handleDeleteQuestion = (question: Question) => {
+    setQuestionToDelete(question);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (questionToDelete) {
+      dispatch(deleteQuestion(questionToDelete._id));
+      setShowDeleteModal(false);
+      setQuestionToDelete(null);
+    }
+  };
+
+  const getQuestionTypeLabel = (type: string) => {
+    switch (type) {
+      case "multiple-choice":
+        return "Multiple Choice";
+      case "true-false":
+        return "True/False";
+      case "fill-blank":
+        return "Fill in the Blank";
+      default:
+        return type;
+    }
+  };
+
+  const getQuestionTypeColor = (type: string) => {
+    switch (type) {
+      case "multiple-choice":
+        return "primary";
+      case "true-false":
+        return "success";
+      case "fill-blank":
+        return "warning";
+      default:
+        return "secondary";
+    }
+  };
+
+  if (showEditor) {
+    return (
+      <div>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h4>{editingQuestion ? "Edit Question" : "Add New Question"}</h4>
+        </div>
+        <QuestionEditor
+          question={editingQuestion}
+          quizId={quizId}
+          onSave={handleSaveQuestion}
+          onCancel={() => {
+            setShowEditor(false);
+            setEditingQuestion(undefined);
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h4>Questions</h4>
+          <p className="text-muted mb-0">
+            Total Points: <strong>{totalPoints}</strong> | Total Questions: <strong>{quizQuestions.length}</strong>
+          </p>
+        </div>
+        <Button variant="primary" onClick={handleAddQuestion}>
+          <FaPlus className="me-2" />
+          New Question
+        </Button>
+      </div>
+
+      {quizQuestions.length === 0 ? (
+        <Card className="text-center p-5">
+          <Card.Body>
+            <FaQuestionCircle className="text-muted mb-3" size={48} />
+            <h5 className="text-muted">No Questions Yet</h5>
+            <p className="text-muted">Click "New Question" to add your first question to this quiz.</p>
+            <Button variant="primary" onClick={handleAddQuestion}>
+              <FaPlus className="me-2" />
+              Add First Question
+            </Button>
+          </Card.Body>
+        </Card>
+      ) : (
+        <ListGroup>
+          {quizQuestions.map((question: Question, index: number) => (
+            <ListGroup.Item key={question._id} className="d-flex justify-content-between align-items-start">
+              <div className="flex-grow-1">
+                <div className="d-flex align-items-center mb-2">
+                  <Badge bg={getQuestionTypeColor(question.type)} className="me-2">
+                    {getQuestionTypeLabel(question.type)}
+                  </Badge>
+                  <Badge bg="secondary" className="me-2">
+                    {question.points} pts
+                  </Badge>
+                  <span className="text-muted">Question {index + 1}</span>
+                </div>
+                <h6 className="mb-2">{question.title}</h6>
+                <div className="text-muted small">
+                  {question.question.length > 100 
+                    ? `${question.question.substring(0, 100)}...` 
+                    : question.question}
+                </div>
+                {question.type === "multiple-choice" && question.choices && (
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      {question.choices.length} choices
+                    </small>
+                  </div>
+                )}
+                {question.type === "fill-blank" && question.possibleAnswers && (
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      {question.possibleAnswers.length} possible answers
+                    </small>
+                  </div>
+                )}
+              </div>
+              <div className="d-flex gap-2">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => handleEditQuestion(question)}
+                >
+                  <FaEdit />
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => handleDeleteQuestion(question)}
+                >
+                  <FaTrash />
+                </Button>
+              </div>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the question "{questionToDelete?.title}"? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+} 

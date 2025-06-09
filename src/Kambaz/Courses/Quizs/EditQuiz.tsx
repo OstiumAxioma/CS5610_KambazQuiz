@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { Form, Button, Card, Badge, CloseButton, Alert } from "react-bootstrap";
+import { Form, Button, Card, Badge, CloseButton, Alert, Tabs, Tab } from "react-bootstrap";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { addQuiz, updateQuiz } from "./reducer";
+import QuestionsList from "./QuestionsList";
 
 interface Quiz {
   _id: string;
@@ -42,6 +43,7 @@ export default function EditQuiz() {
     attempts: 1
   });
   const [saveMessage, setSaveMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("details");
 
   // Check if this is a new quiz
   const foundQuiz = quizs.find((q: Quiz) => q._id === qid);
@@ -170,7 +172,9 @@ export default function EditQuiz() {
           <Link to={`/Kambaz/Courses/${cid}/Quizs`}>
             <Button variant="secondary" className="me-2">Cancel</Button>
           </Link>
-          <Button variant="primary" onClick={handleSave}>Save</Button>
+          {activeTab === "details" && (
+            <Button variant="primary" onClick={handleSave}>Save</Button>
+          )}
         </div>
       </div>
 
@@ -180,7 +184,13 @@ export default function EditQuiz() {
         </Alert>
       )}
 
-      <Form>
+      <Tabs 
+        activeKey={activeTab} 
+        onSelect={(k) => setActiveTab(k || "details")} 
+        className="mb-3"
+      >
+        <Tab eventKey="details" title="Details">
+          <Form>
         <Form.Group className="mb-3" controlId="quizName">
           <Form.Label>Quiz Name *</Form.Label>
           <Form.Control 
@@ -324,6 +334,18 @@ export default function EditQuiz() {
           </Card.Body>
         </Card>
       </Form>
+        </Tab>
+        
+        <Tab eventKey="questions" title="Questions">
+          {!isNewQuiz && qid ? (
+            <QuestionsList quizId={qid} />
+          ) : (
+            <div className="text-center text-muted py-5">
+              <p>Please save the quiz details first before adding questions.</p>
+            </div>
+          )}
+        </Tab>
+      </Tabs>
     </div>
   );
 } 
