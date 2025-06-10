@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Card, Form, Badge, ProgressBar, Alert } from "react-bootstrap";
+import { Button, Card, Form, Badge, Alert } from "react-bootstrap";
 import { FaArrowLeft, FaArrowRight, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { addQuizAttempt, submitQuizAttempt, updateQuizAttemptAnswers } from "./quizAttemptsReducer";
 
@@ -264,7 +264,7 @@ export default function PreviewQuiz() {
   };
 
   const calculateResults = () => {
-    if (!quiz) return { score: 0, totalPoints: 0, correctAnswers: 0 };
+    if (!quiz) return { score: 0, totalPoints: 0, correctAnswers: 0, answersList: [] };
     
     let correctCount = 0;
     let totalPoints = 0;
@@ -335,6 +335,16 @@ export default function PreviewQuiz() {
     }
     
     setIsSubmitted(true);
+    if (attempt) {
+      const updatedAttempt: QuizAttempt = {
+        ...attempt,
+        score,
+        totalPoints,
+        answers: answersList,
+        endTime: new Date().toISOString()
+      };
+      setAttempt(updatedAttempt);
+    }
   };
 
   const handleJumpToQuestion = (index: number) => {
