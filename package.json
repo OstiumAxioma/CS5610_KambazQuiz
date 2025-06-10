@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "@types/antd": "^0.12.32",
     "@types/uuid": "^10.0.0",
+    "antd": "^5.26.0",
     "bootstrap": "^5.3.6",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",

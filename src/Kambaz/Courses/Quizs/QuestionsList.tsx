@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Card, ListGroup, Badge, Modal } from "react-bootstrap";
+import { Button, Card, ListGroup, Badge, Modal, Form } from "react-bootstrap";
 import { FaPlus, FaEdit, FaTrash, FaQuestionCircle } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { addQuestion, deleteQuestion, updateQuestion } from "./reducer";
@@ -23,13 +23,14 @@ interface QuestionsListProps {
 
 export default function QuestionsList({ quizId }: QuestionsListProps) {
   const dispatch = useDispatch();
-  const { questions } = useSelector((state: any) => state.quizsReducer);
+  const { questions = [] } = useSelector((state: any) => state.quizsReducer);
   const quizQuestions = questions.filter((q: Question) => q.quizId === quizId);
   
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+  const [questionType, setQuestionType] = useState<Question["type"]>("multiple-choice");
 
   const totalPoints = quizQuestions.reduce((sum: number, q: Question) => sum + q.points, 0);
 
@@ -40,16 +41,27 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
 
   const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question);
+    setQuestionType(question.type);
     setShowEditor(true);
   };
 
   const handleSaveQuestion = (question: Question) => {
     if (question._id && editingQuestion) {
       // Update existing question
-      dispatch(updateQuestion(question));
+      dispatch(updateQuestion({
+        ...question,
+        quizId: quizId,
+        type: editingQuestion.type
+      }));
     } else {
       // Add new question
-      dispatch(addQuestion(question));
+      const newQuestion = {
+        ...question,
+        quizId: quizId,
+        type: questionType,
+        _id: new Date().getTime().toString(),
+      };
+      dispatch(addQuestion(newQuestion));
     }
     setShowEditor(false);
     setEditingQuestion(undefined);
@@ -99,10 +111,22 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
       <div>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4>{editingQuestion ? "Edit Question" : "Add New Question"}</h4>
+          {!editingQuestion && (
+            <Form.Select
+              value={questionType}
+              onChange={(e) => setQuestionType(e.target.value as Question["type"])}
+              className="w-auto"
+            >
+              <option value="multiple-choice">Multiple Choice</option>
+              <option value="true-false">True/False</option>
+              <option value="fill-blank">Fill in the Blank</option>
+            </Form.Select>
+          )}
         </div>
         <QuestionEditor
           question={editingQuestion}
           quizId={quizId}
+          type={questionType}
           onSave={handleSaveQuestion}
           onCancel={() => {
             setShowEditor(false);

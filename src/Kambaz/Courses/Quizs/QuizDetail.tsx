@@ -205,12 +205,12 @@ export default function QuizDetail() {
             </>
           )}
           {/* Only show Take Quiz button here if there are no previous attempts */}
-          {isStudent && canTakeQuiz && userAttempts.length === 0 && (
+          {isStudent && canTakeQuiz && (
             <Button 
               variant="success"
               onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview`)}
             >
-              Take Quiz
+              {userAttempts.length === 0 ? "Take Quiz" : "Start New Attempt"}
             </Button>
           )}
         </div>
@@ -332,158 +332,70 @@ export default function QuizDetail() {
                 <h5 className="mb-0">Your Quiz Status</h5>
               </Card.Header>
               <Card.Body>
-                {userAttempts.length > 0 ? (
-                  <>
-                    {/* Show all attempts in a table */}
-                    <h6>All Attempts</h6>
-                    <Table bordered hover>
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Date</th>
-                          <th>Score</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {userAttempts
-                          .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-                          .map((attempt, index) => (
-                            <tr key={attempt._id}>
-                              <td>{attempt.attemptNumber}</td>
-                              <td>{new Date(attempt.startTime).toLocaleDateString()}</td>
-                              <td>
-                                {attempt.endTime ? 
-                                  `${attempt.score}/${attempt.totalPoints} (${Math.round((attempt.score / attempt.totalPoints) * 100)}%)` : 
-                                  "In progress"}
-                              </td>
-                              <td>
-                                {attempt.endTime ? 
-                                  <Badge bg="success">Completed</Badge> : 
-                                  <Badge bg="warning">In progress</Badge>}
-                              </td>
-                              <td>
-                                {attempt.endTime ? (
-                                  index === 0 ? (
-                                    <Button
-                                      variant="outline-primary"
-                                      size="sm"
-                                      onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview?viewAttempt=${attempt._id}`)}
-                                    >
-                                      View Results
-                                    </Button>
-                                  ) : (
-                                    <span className="text-muted small">Results unavailable</span>
-                                  )
-                                ) : (
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview`)}
-                                  >
-                                    Continue
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </Table>
-                    
-                    {/* If student can take another attempt, show the Start New Attempt button */}
-                    {canTakeQuiz && (
-                      <div className="d-grid mt-3">
-                        <Button 
-                          variant="success"
-                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview`)}
-                        >
-                          Start New Attempt
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Show attempt count information */}
-                    {quiz.multipleAttempts && (
-                      <div className="text-muted mt-2 text-center">
-                        <small>You have used {userAttempts.filter(a => a.endTime).length} of {quiz.attempts} allowed attempts.</small>
-                      </div>
-                    )}
-                    
-                    {/* Section for showing the latest attempt's detailed answers if available */}
-                    {latestAttempt && latestAttempt.endTime && (
-                      <div className="mt-4">
-                        <h6>Latest Attempt Details</h6>
-                        <div className="card p-3 bg-light">
-                          <div className="d-flex justify-content-between mb-3">
-                            <div>
-                              <strong>Date:</strong> {new Date(latestAttempt.startTime).toLocaleString()}
-                            </div>
-                            <div>
-                              <strong>Score:</strong> {latestAttempt.score}/{latestAttempt.totalPoints} 
-                              ({Math.round((latestAttempt.score / latestAttempt.totalPoints) * 100)}%)
-                            </div>
-                          </div>
-                          
-                          {latestAttempt.answers && latestAttempt.answers.length > 0 ? (
-                            <div>
-                              <h6>Question Results:</h6>
-                              <Table bordered size="sm">
-                                <thead>
-                                  <tr>
-                                    <th>#</th>
-                                    <th>Answer</th>
-                                    <th>Result</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {latestAttempt.answers.map((answer, index) => (
-                                    <tr key={index}>
-                                      <td>{index + 1}</td>
-                                      <td>
-                                        {answer.userAnswer || <em>No answer</em>}
-                                      </td>
-                                      <td>
-                                        {answer.isCorrect ? 
-                                          <Badge bg="success">Correct</Badge> : 
-                                          <Badge bg="danger">Incorrect</Badge>}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                              <div className="text-center mt-3">
+                <h6>All Attempts</h6>
+                <Table bordered hover>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Date</th>
+                      <th>Score</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userAttempts
+                      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+                      .map((attempt, index) => (
+                        <tr key={attempt._id}>
+                          <td>{attempt.attemptNumber}</td>
+                          <td>{new Date(attempt.startTime).toLocaleDateString()}</td>
+                          <td>
+                            {attempt.endTime ? 
+                              `${attempt.score}/${attempt.totalPoints} (${Math.round((attempt.score / attempt.totalPoints) * 100)}%)` : 
+                              "In progress"}
+                          </td>
+                          <td>
+                            {attempt.endTime ? 
+                              <Badge bg="success">Completed</Badge> : 
+                              <Badge bg="warning">In progress</Badge>}
+                          </td>
+                          <td>
+                            {attempt.endTime ? (
+                              index === 0 ? (
                                 <Button
-                                  variant="primary"
+                                  variant="outline-primary"
                                   size="sm"
-                                  onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview?viewAttempt=${latestAttempt._id}`)}
+                                  onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview?viewAttempt=${attempt._id}`)}
                                 >
-                                  View Detailed Results
+                                  View Results
                                 </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center">
-                              <p>No detailed answer information available.</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : canTakeQuiz ? (
-                  <div className="text-center">
-                    <p>You haven't attempted this quiz yet.</p>
+                              ) : (
+                                <span className="text-muted small">Results unavailable</span>
+                              )
+                            ) : (
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview`)}
+                              >
+                                Continue
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </Table>
+                {/* Start New Attempt按钮只要canTakeQuiz为true就显示 */}
+                {canTakeQuiz && (
+                  <div className="d-grid mt-3">
                     <Button 
                       variant="success"
                       onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}/preview`)}
                     >
-                      Start Quiz
+                      Start New Attempt
                     </Button>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <p>This quiz is not currently available.</p>
                   </div>
                 )}
               </Card.Body>

@@ -17,14 +17,15 @@ interface Question {
 interface QuestionEditorProps {
   question?: Question;
   quizId: string;
+  type: "multiple-choice" | "true-false" | "fill-blank";
   onSave: (question: Question) => void;
   onCancel: () => void;
 }
 
-export default function QuestionEditor({ question, quizId, onSave, onCancel }: QuestionEditorProps) {
+export default function QuestionEditor({ question, quizId, type, onSave, onCancel }: QuestionEditorProps) {
   const [formData, setFormData] = useState<Question>({
     quizId,
-    type: "multiple-choice",
+    type,
     title: "",
     points: 1,
     question: "",
@@ -48,8 +49,13 @@ export default function QuestionEditor({ question, quizId, onSave, onCancel }: Q
         ],
         possibleAnswers: question.possibleAnswers || [""]
       });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        type
+      }));
     }
-  }, [question]);
+  }, [question, type]);
 
   const handleFieldChange = (field: keyof Question, value: any) => {
     setFormData(prev => ({
@@ -139,14 +145,17 @@ export default function QuestionEditor({ question, quizId, onSave, onCancel }: Q
     return newErrors.length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!validateForm()) {
       return;
     }
 
     const questionToSave: Question = {
       ...formData,
-      _id: question?._id || new Date().getTime().toString()
+      _id: question?._id || new Date().getTime().toString(),
+      quizId: quizId
     };
 
     onSave(questionToSave);
@@ -254,9 +263,9 @@ export default function QuestionEditor({ question, quizId, onSave, onCancel }: Q
   };
 
   return (
-    <div className="question-editor">
+    <Form onSubmit={handleSave}>
       {errors.length > 0 && (
-        <Alert variant="danger">
+        <Alert variant="danger" className="mb-3">
           <ul className="mb-0">
             {errors.map((error, index) => (
               <li key={index}>{error}</li>
@@ -265,67 +274,54 @@ export default function QuestionEditor({ question, quizId, onSave, onCancel }: Q
         </Alert>
       )}
 
-      <Form>
-        <Row className="mb-3">
-          <Col md={8}>
-            <Form.Group>
-              <Form.Label>Question Title *</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter question title"
-                value={formData.title}
-                onChange={(e) => handleFieldChange('title', e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={2}>
-            <Form.Group>
-              <Form.Label>Points *</Form.Label>
-              <Form.Control
-                type="number"
-                min="1"
-                value={formData.points}
-                onChange={(e) => handleFieldChange('points', parseInt(e.target.value) || 1)}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={2}>
-            <Form.Group>
-              <Form.Label>Question Type</Form.Label>
-              <Form.Select
-                value={formData.type}
-                onChange={(e) => handleFieldChange('type', e.target.value as Question['type'])}
-              >
-                <option value="multiple-choice">Multiple Choice</option>
-                <option value="true-false">True/False</option>
-                <option value="fill-blank">Fill in the Blank</option>
-              </Form.Select>
-            </Form.Group>
-          </Col>
-        </Row>
+      <Card className="mb-3">
+        <Card.Body>
+          <Form.Group className="mb-3">
+            <Form.Label>Question Title</Form.Label>
+            <Form.Control
+              type="text"
+              value={formData.title}
+              onChange={(e) => handleFieldChange('title', e.target.value)}
+              placeholder="Enter question title"
+              required
+            />
+          </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Question *</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            placeholder="Enter the question text"
-            value={formData.question}
-            onChange={(e) => handleFieldChange('question', e.target.value)}
-          />
-        </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Question Text</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={formData.question}
+              onChange={(e) => handleFieldChange('question', e.target.value)}
+              placeholder="Enter your question"
+              required
+            />
+          </Form.Group>
 
-        {renderTypeSpecificFields()}
+          <Form.Group className="mb-3">
+            <Form.Label>Points</Form.Label>
+            <Form.Control
+              type="number"
+              min="1"
+              value={formData.points}
+              onChange={(e) => handleFieldChange('points', parseInt(e.target.value) || 1)}
+              required
+            />
+          </Form.Group>
+        </Card.Body>
+      </Card>
 
-        <div className="d-flex justify-content-end gap-2">
-          <Button variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {question ? 'Update Question' : 'Save Question'}
-          </Button>
-        </div>
-      </Form>
-    </div>
+      {renderTypeSpecificFields()}
+
+      <div className="d-flex justify-content-end gap-2">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="primary" type="submit">
+          {question ? "Update Question" : "Save Question"}
+        </Button>
+      </div>
+    </Form>
   );
 } 
