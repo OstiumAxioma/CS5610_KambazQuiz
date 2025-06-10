@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { FaSearch, FaPlus, FaCheckCircle, FaTrash, FaEdit, FaBan, FaEllipsisV } from "react-icons/fa";
+import { FaPlus, FaCheckCircle, FaTrash, FaEdit, FaBan, FaEllipsisV, FaCopy } from "react-icons/fa";
 import { BsQuestionCircle } from "react-icons/bs";
-import { ListGroup, Button, Modal, Dropdown } from "react-bootstrap";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Button, Modal, Dropdown, Form } from "react-bootstrap";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteQuiz, addQuiz, toggleQuizPublish } from "./reducer";
 
@@ -25,42 +25,49 @@ export default function Quizs() {
   const { cid } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { quizs } = useSelector((state: any) => state.quizsReducer);
-  const { quizAttempts } = useSelector((state: any) => state.quizAttemptsReducer);
-  
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+  const { courses } = useSelector((state: any) => state.coursesReducer);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [quizToCopy, setQuizToCopy] = useState<Quiz | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "dueDate" | "availableDate">("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // 获取当前课程的测验列表
   const courseQuizs = quizs.filter((quiz: Quiz) => {
     if (currentUser?.role === "STUDENT") {
-      return quiz.course === cid && quiz.published === true;
+      return quiz.course === cid && quiz.published;
     }
     return quiz.course === cid;
   });
-  
-  // State for delete confirmation modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
 
-  // Check if current user has edit permissions (FACULTY or ADMIN)
-  const canEdit = currentUser?.role === "FACULTY" || currentUser?.role === "ADMIN";
-
-  const handleAddQuiz = () => {
-    const newQuizId = new Date().getTime().toString();
-    const newQuiz = {
-      _id: newQuizId,
-      title: "New Quiz",
-      course: cid,
-    };
-    dispatch(addQuiz(newQuiz));
-    // Navigate to edit page for the new quiz
-    navigate(`/Kambaz/Courses/${cid}/Quizs/${newQuizId}/edit`);
-  };
+  // 排序测验列表
+  const sortedQuizs = [...courseQuizs].sort((a, b) => {
+    if (sortBy === "name") {
+      return sortOrder === "asc" 
+        ? a.title.localeCompare(b.title)
+        : b.title.localeCompare(a.title);
+    } else if (sortBy === "dueDate") {
+      const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+      const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    } else {
+      const dateA = a.availableFrom ? new Date(a.availableFrom).getTime() : 0;
+      const dateB = b.availableFrom ? new Date(b.availableFrom).getTime() : 0;
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    }
+  });
 
   const handleDeleteQuiz = (quiz: Quiz) => {
     setQuizToDelete(quiz);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDeleteQuiz = () => {
     if (quizToDelete) {
       dispatch(deleteQuiz(quizToDelete._id));
       setShowDeleteModal(false);
@@ -68,201 +75,231 @@ export default function Quizs() {
     }
   };
 
-  const handleTogglePublish = (quizId: string) => {
-    dispatch(toggleQuizPublish(quizId));
+  const handlePublishToggle = (quiz: Quiz) => {
+    dispatch(toggleQuizPublish(quiz._id));
   };
 
-  const getAvailabilityStatus = (quiz: Quiz) => {
+  const handleCopyQuiz = (quiz: Quiz) => {
+    setQuizToCopy(quiz);
+    setShowCopyModal(true);
+  };
+
+  const confirmCopyQuiz = () => {
+    if (quizToCopy && selectedCourse) {
+      const newQuiz = {
+        ...quizToCopy,
+        _id: new Date().getTime().toString(),
+        course: selectedCourse,
+        title: `${quizToCopy.title} (Copy)`,
+        published: false
+      };
+      dispatch(addQuiz(newQuiz));
+      setShowCopyModal(false);
+      setQuizToCopy(null);
+      setSelectedCourse("");
+    }
+  };
+
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const month = date.toLocaleString('default', { month: 'short' });
+    const day = date.getDate();
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${month} ${day} at ${time}`;
+  };
+
+  // 获取测验状态
+  const getQuizStatus = (quiz: Quiz) => {
     const now = new Date();
+    const dueDate = quiz.dueDate ? new Date(quiz.dueDate) : null;
     const availableFrom = quiz.availableFrom ? new Date(quiz.availableFrom) : null;
     const availableUntil = quiz.availableUntil ? new Date(quiz.availableUntil) : null;
 
+    if (dueDate && now > dueDate) {
+      return "Closed";
+    }
+
     if (!quiz.published) {
-      return { text: "Not Published", className: "text-muted" };
+      return "Not Published";
     }
 
     if (availableUntil && now > availableUntil) {
-      return { text: "Closed", className: "text-danger" };
+      return "Closed";
     }
 
     if (availableFrom && now < availableFrom) {
-      const dateStr = availableFrom.toLocaleDateString();
-      return { text: `Not available until ${dateStr}`, className: "text-warning" };
+      return "Not available";
     }
 
-    if (availableFrom && availableUntil && now >= availableFrom && now <= availableUntil) {
-      return { text: "Available", className: "text-success" };
-    }
-
-    return { text: "Available", className: "text-success" };
-  };
-
-  const formatDueDate = (dueDate?: string) => {
-    if (!dueDate) return "";
-    const date = new Date(dueDate);
-    return `Due ${date.toLocaleDateString()} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    return "Available";
   };
 
   return (
-    <div className="container-fluid">
-      <div className="row align-items-center mb-3">
-        <div className="col-6">
-          <div className="input-group w-100">
-            <span className="input-group-text bg-white border-end-0">
-              <FaSearch />
-            </span>
-            <input
-              className="form-control border-start-0"
-              placeholder="Search for Quizs"
-              id="wd-search-quiz"
-            />
-          </div>
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex align-items-center">
+          <Form.Select 
+            className="me-2" 
+            style={{ width: "auto" }}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+          >
+            <option value="name">Sort by Name</option>
+            <option value="dueDate">Sort by Due Date</option>
+            <option value="availableDate">Sort by Available Date</option>
+          </Form.Select>
+          <Button 
+            variant="outline-secondary" 
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          >
+            {sortOrder === "asc" ? "↑" : "↓"}
+          </Button>
         </div>
-        {canEdit && (
-          <div className="col d-flex justify-content-end">
-            <button 
-              className="btn btn-danger" 
-              id="wd-add-quiz"
-              onClick={handleAddQuiz}
-            >
-              <FaPlus className="me-1" /> Quiz
-            </button>
-          </div>
+        {currentUser?.role === "FACULTY" && (
+          <Button 
+            variant="primary" 
+            onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/new/edit`)}
+          >
+            <FaPlus className="me-2" />
+            Quiz
+          </Button>
         )}
       </div>
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex align-items-center mb-3">
-            <h3 className="mb-0 me-3" id="wd-quizs-title">
-              QUIZS
-            </h3>
-            {canEdit && (
-              <button 
-                className="btn btn-light ms-auto p-2"
-                onClick={handleAddQuiz}
-              >
-                <FaPlus />
-              </button>
-            )}
-          </div>
-          <ListGroup id="wd-quiz-list">
-            {courseQuizs.map((quiz: Quiz) => {
-              const availabilityStatus = getAvailabilityStatus(quiz);
-              return (
-                <ListGroup.Item key={quiz._id} className="d-flex align-items-start border-start border-4 border-success mb-3 p-3 wd-quiz-list-item">
-                  <BsQuestionCircle className="text-success fs-4 me-3 mt-1" />
+
+      {sortedQuizs.map((quiz: Quiz) => {
+        const status = getQuizStatus(quiz);
+        return (
+          <div key={quiz._id} className="quiz-item mb-3 p-3 border rounded">
+            <div className="d-flex justify-content-between align-items-start">
+              <div className="flex-grow-1">
+                <div className="d-flex align-items-center">
+                  <div className="me-2">
+                    <BsQuestionCircle className="text-success fs-4" />
+                  </div>
                   <div className="flex-grow-1">
-                    <div className="fw-bold fs-5">
-                      {canEdit ? (
-                        <Link to={`/Kambaz/Courses/${cid}/Quizs/${quiz._id}`} className="text-decoration-none text-dark">
-                          {quiz.title}
-                        </Link>
-                      ) : (
-                        <Link to={`/Kambaz/Courses/${cid}/Quizs/${quiz._id}`} className="text-decoration-none text-dark">
-                          {quiz.title}
-                        </Link>
+                    <div className="fw-bold" style={{ cursor: 'pointer' }} onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}`)}>
+                      {quiz.title}
+                    </div>
+                    <div className="small text-muted">
+                      {status === "Closed" && <span>Closed</span>}
+                      {status === "Not available" && quiz.availableFrom && (
+                        <span>Not available until {formatDate(quiz.availableFrom)}</span>
                       )}
-                    </div>
-                    <div className="small">
-                      <span className={availabilityStatus.className}>
-                        {availabilityStatus.text}
-                      </span>
-                    </div>
-                    <div className="text-muted small">
-                      {formatDueDate(quiz.dueDate)} | {quiz.points || 100} pts | {quiz.questions || 0} Questions
-                    </div>
-                    {currentUser?.role === "STUDENT" && quiz.published && (
-                      <div className="text-muted small">
-                        Last attempt score: {
-                          quizAttempts.filter((a: any) => a.quiz === quiz._id && a.user === currentUser._id && a.endTime).length > 0 
-                            ? `${quizAttempts.filter((a: any) => a.quiz === quiz._id && a.user === currentUser._id)
-                                .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())[0].score} / ${quiz.points || 100}`
-                            : `-- / ${quiz.points || 100}`
-                        }
-                      </div>
-                    )}
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    {canEdit ? (
-                      <Dropdown>
-                        <Dropdown.Toggle variant="light" size="sm" id={`dropdown-${quiz._id}`}>
-                          <FaEllipsisV />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/edit`)}>
-                            <FaEdit className="me-2" /> Edit
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/preview`)}>
-                            <FaCheckCircle className="me-2" /> Preview
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleDeleteQuiz(quiz)}>
-                            <FaTrash className="me-2" /> Delete
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleTogglePublish(quiz._id)}>
-                            {quiz.published ? (
-                              <>
-                                <FaBan className="me-2" /> Unpublish
-                              </>
-                            ) : (
-                              <>
-                                <FaCheckCircle className="me-2" /> Publish
-                              </>
-                            )}
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    ) : (
-                      quiz.published && (
-                        <Button 
-                          variant="primary" 
-                          size="sm"
-                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/preview`)}
-                        >
-                          Take Quiz
-                        </Button>
-                      )
-                    )}
-                    <div className="ms-2">
-                      {quiz.published ? (
-                        <FaCheckCircle 
-                          className="text-success fs-4 cursor-pointer" 
-                          onClick={canEdit ? () => handleTogglePublish(quiz._id) : undefined}
-                          title="Published - Click to unpublish"
-                        />
-                      ) : (
-                        <FaBan 
-                          className="text-muted fs-4 cursor-pointer" 
-                          onClick={canEdit ? () => handleTogglePublish(quiz._id) : undefined}
-                          title="Unpublished - Click to publish"
-                        />
+                      {status === "Available" && quiz.availableUntil && (
+                        <span>Available until {formatDate(quiz.availableUntil)}</span>
                       )}
+                      {" "}Due {formatDate(quiz.dueDate)}
+                    </div>
+                    <div className="small text-muted">
+                      {quiz.points || 0} pts | {quiz.questions || 0} Question{quiz.questions !== 1 ? 's' : ''}
                     </div>
                   </div>
-                </ListGroup.Item>
-              );
-            })}
-            {courseQuizs.length === 0 && (
-              <ListGroup.Item className="text-center text-muted py-4">
-                {canEdit ? "No quizs yet. Click + Quiz to create your first quiz." : "No quizs available."}
-              </ListGroup.Item>
-            )}
-          </ListGroup>
+                </div>
+              </div>
+              {/* 右侧操作区：Dropdown和发布/未发布图标同一行对齐，仅faculty可见 */}
+              {currentUser?.role === "FACULTY" && (
+                <div className="d-flex align-items-center ms-2">
+                  <Dropdown className="me-2">
+                    <Dropdown.Toggle variant="light" id={`dropdown-${quiz._id}`}> 
+                      <FaEllipsisV />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/edit`)}>
+                        <FaEdit className="me-2" /> Edit
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleCopyQuiz(quiz)}>
+                        <FaCopy className="me-2" /> Copy
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleDeleteQuiz(quiz)}>
+                        <FaTrash className="me-2" /> Delete
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handlePublishToggle(quiz)}>
+                        {quiz.published ? (
+                          <><FaBan className="me-2" /> Unpublish</>
+                        ) : (
+                          <><FaCheckCircle className="me-2" /> Publish</>
+                        )}
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}/preview`)}>
+                        <FaCheckCircle className="me-2" /> Preview
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                  <span
+                    className="fs-4 align-self-center"
+                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', height: '38px', width: '38px', justifyContent: 'center', background: 'none', borderRadius: '0.375rem' }}
+                    title={quiz.published ? "已发布，点击取消发布" : "未发布，点击发布"}
+                    onClick={() => handlePublishToggle(quiz)}
+                  >
+                    {quiz.published ? "✅" : "🚫"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {sortedQuizs.length === 0 && (
+        <div className="text-center text-muted py-4">
+          {currentUser?.role === "FACULTY" ? "No quizs yet. Click + Quiz to create your first quiz." : "No quizs available."}
         </div>
-      </div>
+      )}
+
+      {/* Copy Quiz Modal */}
+      <Modal show={showCopyModal} onHide={() => setShowCopyModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Copy Quiz</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Select Course to Copy To</Form.Label>
+              <Form.Select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+              >
+                <option value="">Select a course...</option>
+                {courses
+                  .filter((course: any) => course._id !== cid)
+                  .map((course: any) => (
+                    <option key={course._id} value={course._id}>
+                      {course.name}
+                    </option>
+                  ))}
+              </Form.Select>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCopyModal(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={confirmCopyQuiz}
+            disabled={!selectedCourse}
+          >
+            Copy Quiz
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>Delete Quiz</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete quiz "{quizToDelete?.title}"? This action cannot be undone.
+          Are you sure you want to delete this quiz? This action cannot be undone.
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={confirmDelete}>
+          <Button variant="danger" onClick={confirmDeleteQuiz}>
             Delete
           </Button>
         </Modal.Footer>

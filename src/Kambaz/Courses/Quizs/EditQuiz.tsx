@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { Form, Button, Card, Badge, CloseButton, Alert } from "react-bootstrap";
+import { Form, Button, Card, Badge, CloseButton, Alert, Row, Col } from "react-bootstrap";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { addQuiz, updateQuiz } from "./reducer";
@@ -18,6 +18,15 @@ interface Quiz {
   questions?: number;
   timeLimit?: number;
   attempts?: number;
+  quizType?: string;
+  assignmentGroup?: string;
+  shuffleAnswers?: boolean;
+  multipleAttempts?: boolean;
+  showCorrectAnswers?: string;
+  accessCode?: string;
+  oneQuestionAtTime?: boolean;
+  webcamRequired?: boolean;
+  lockQuestionsAfterAnswering?: boolean;
 }
 
 export default function EditQuiz() {
@@ -28,20 +37,30 @@ export default function EditQuiz() {
   const { quizs } = useSelector((state: any) => state.quizsReducer);
   const [assignees, setAssignees] = useState<string[]>(["Everyone"]);
   const [input, setInput] = useState("");
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [formData, setFormData] = useState({
+  const [quiz, setQuiz] = useState<Quiz>({
+    _id: "",
     title: "",
+    course: cid || "",
     description: "",
     points: 100,
     dueDate: "",
     availableFrom: "",
     availableUntil: "",
     published: false,
-    questions: 5,
-    timeLimit: 60,
-    attempts: 1
+    questions: 0,
+    timeLimit: 0,
+    attempts: 1,
+    quizType: "practice_quiz",
+    assignmentGroup: "quizzes",
+    shuffleAnswers: false,
+    multipleAttempts: false,
+    showCorrectAnswers: "never",
+    accessCode: "",
+    oneQuestionAtTime: false,
+    webcamRequired: false,
+    lockQuestionsAfterAnswering: false
   });
-  const [saveMessage, setSaveMessage] = useState("");
+  const [saveMessage] = useState("");
 
   // Check if this is a new quiz
   const foundQuiz = quizs.find((q: Quiz) => q._id === qid);
@@ -53,34 +72,32 @@ export default function EditQuiz() {
   useEffect(() => {
     if (!isNewQuiz && foundQuiz) {
       setQuiz(foundQuiz);
-      setFormData({
-        title: foundQuiz.title || "",
-        description: foundQuiz.description || "",
-        points: foundQuiz.points || 100,
-        dueDate: foundQuiz.dueDate || "",
-        availableFrom: foundQuiz.availableFrom || "",
-        availableUntil: foundQuiz.availableUntil || "",
-        published: foundQuiz.published || false,
-        questions: foundQuiz.questions || 5,
-        timeLimit: foundQuiz.timeLimit || 60,
-        attempts: foundQuiz.attempts || 1
-      });
     } else if (isNewQuiz) {
-
-      setFormData({
+      setQuiz({
+        _id: new Date().getTime().toString(),
         title: "New Quiz",
+        course: cid || "",
         description: "",
         points: 100,
         dueDate: "",
         availableFrom: "",
         availableUntil: "",
         published: false,
-        questions: 5,
-        timeLimit: 60,
-        attempts: 1
+        questions: 0,
+        timeLimit: 20,
+        attempts: 1,
+        quizType: "Graded Quiz",
+        assignmentGroup: "Quizzes",
+        shuffleAnswers: true,
+        multipleAttempts: false,
+        showCorrectAnswers: "Immediately",
+        accessCode: "",
+        oneQuestionAtTime: true,
+        webcamRequired: false,
+        lockQuestionsAfterAnswering: false
       });
     }
-  }, [qid, isNewQuiz, foundQuiz]);
+  }, [qid, isNewQuiz, foundQuiz, cid]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value);
 
@@ -98,59 +115,24 @@ export default function EditQuiz() {
     setAssignees(assignees.filter((a) => a !== name));
   };
 
-  const handleFormChange = (field: string, value: string | number | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (qid) {
+      dispatch(updateQuiz(quiz));
+    } else {
+      dispatch(addQuiz(quiz));
+    }
+    navigate(`/Kambaz/Courses/${cid}/Quizs`);
   };
 
-  const handleSave = () => {
-    if (!formData.title.trim()) {
-      setSaveMessage("Please enter quiz title");
-      return;
-    }
-
-    if (isNewQuiz) {
-      // Create new quiz
-      const newQuiz = {
-        title: formData.title,
-        course: cid!,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableFrom: formData.availableFrom,
-        availableUntil: formData.availableUntil,
-        published: formData.published,
-        questions: formData.questions,
-        timeLimit: formData.timeLimit,
-        attempts: formData.attempts
-      };
-      dispatch(addQuiz(newQuiz));
-      setSaveMessage("Quiz created successfully!");
+  const handleSaveAndPublish = () => {
+    const publishedQuiz = { ...quiz, published: true };
+    if (qid) {
+      dispatch(updateQuiz(publishedQuiz));
     } else {
-
-      const updatedQuiz = {
-        _id: qid!,
-        title: formData.title,
-        course: cid!,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableFrom: formData.availableFrom,
-        availableUntil: formData.availableUntil,
-        published: formData.published,
-        questions: formData.questions,
-        timeLimit: formData.timeLimit,
-        attempts: formData.attempts
-      };
-      dispatch(updateQuiz(updatedQuiz));
-      setSaveMessage("Quiz updated successfully!");
+      dispatch(addQuiz(publishedQuiz));
     }
-
-    setTimeout(() => {
-      navigate(`/Kambaz/Courses/${cid}/Quizs`);
-    }, 1500);
+    navigate(`/Kambaz/Courses/${cid}/Quizs`);
   };
 
   if (!canEdit) {
@@ -169,11 +151,8 @@ export default function EditQuiz() {
           <Link to={`/Kambaz/Courses/${cid}/Quizs`}>
             <Button variant="secondary" className="me-2">Cancel</Button>
           </Link>
-          <Button variant="primary" onClick={handleSave}>Save</Button>
-          <Button variant="success" className="ms-2" onClick={() => {
-            handleSave();
-            dispatch(updateQuiz({...quiz, published: true}));
-          }}>Save & Publish</Button>
+          <Button variant="primary" type="submit">Save</Button>
+          <Button variant="success" className="ms-2" onClick={handleSaveAndPublish}>Save & Publish</Button>
         </div>
       </div>
 
@@ -202,123 +181,208 @@ export default function EditQuiz() {
         </li>
       </ul>
 
-      <Form>
-        <Form.Group className="mb-3" controlId="quizName">
-          <Form.Label>Quiz Name *</Form.Label>
-          <Form.Control 
-            type="text" 
-            placeholder="Enter quiz name" 
-            value={formData.title}
-            onChange={(e) => handleFormChange("title", e.target.value)}
-            required
-          />
-        </Form.Group>
-        
-        <Form.Group className="mb-3" controlId="quizDescription">
-          <Form.Label>Quiz Instructions</Form.Label>
-          <Form.Control 
-            as="textarea" 
-            rows={3} 
-            placeholder="Enter quiz instructions" 
-            value={formData.description}
-            onChange={(e) => handleFormChange("description", e.target.value)}
-          />
-        </Form.Group>
-
-        <div className="row mb-3">
-          <div className="col-md-4">
-            <Form.Group controlId="quizPoints">
-              <Form.Label>Points</Form.Label>
-              <Form.Control 
-                type="number" 
-                placeholder="Enter points" 
-                value={formData.points}
-                onChange={(e) => handleFormChange("points", parseInt(e.target.value) || 0)}
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-4">
-            <Form.Group controlId="quizQuestions">
-              <Form.Label>Number of Questions</Form.Label>
-              <Form.Control 
-                type="number" 
-                placeholder="Enter number of questions" 
-                value={formData.questions}
-                onChange={(e) => handleFormChange("questions", parseInt(e.target.value) || 0)}
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-4">
-            <Form.Group controlId="quizTimeLimit">
-              <Form.Label>Time Limit (minutes)</Form.Label>
-              <Form.Control 
-                type="number" 
-                placeholder="Enter time limit" 
-                value={formData.timeLimit}
-                onChange={(e) => handleFormChange("timeLimit", parseInt(e.target.value) || 0)}
-              />
-            </Form.Group>
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <Form.Group controlId="quizAttempts">
-              <Form.Label>Allowed Attempts</Form.Label>
-              <Form.Control 
-                type="number" 
-                placeholder="Enter allowed attempts" 
-                value={formData.attempts}
-                onChange={(e) => handleFormChange("attempts", parseInt(e.target.value) || 1)}
-                min="1"
-              />
-            </Form.Group>
-          </div>
-          <div className="col-md-6">
-            <Form.Group controlId="quizDueDate">
-              <Form.Label>Due Date</Form.Label>
-              <Form.Control 
-                type="datetime-local" 
-                value={formData.dueDate}
-                onChange={(e) => handleFormChange("dueDate", e.target.value)}
-              />
-            </Form.Group>
-          </div>
-        </div>
-
-        <Card className="mb-3">
-          <Card.Header>Availability</Card.Header>
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4">
           <Card.Body>
-            <Form.Group className="mb-3" controlId="quizPublished">
-              <Form.Check 
-                type="checkbox" 
-                label="Published (visible to students)"
-                checked={formData.published}
-                onChange={(e) => handleFormChange("published", e.target.checked)}
+            <Form.Group className="mb-3">
+              <Form.Label>Quiz Title</Form.Label>
+              <Form.Control
+                type="text"
+                value={quiz.title}
+                onChange={(e) => setQuiz({ ...quiz, title: e.target.value })}
+                required
               />
             </Form.Group>
-            <div className="row">
-              <div className="col-md-6">
-                <Form.Group controlId="quizAvailableFrom">
-                  <Form.Label>Available from</Form.Label>
-                  <Form.Control 
-                    type="datetime-local" 
-                    value={formData.availableFrom}
-                    onChange={(e) => handleFormChange("availableFrom", e.target.value)}
+
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={5}
+                value={quiz.description || ""}
+                onChange={(e) => setQuiz({ ...quiz, description: e.target.value })}
+                placeholder="Enter quiz description..."
+              />
+            </Form.Group>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Quiz Type</Form.Label>
+                  <Form.Select
+                    value={quiz.quizType}
+                    onChange={(e) => setQuiz({ ...quiz, quizType: e.target.value })}
+                  >
+                    <option value="Graded Quiz">Graded Quiz</option>
+                    <option value="Practice Quiz">Practice Quiz</option>
+                    <option value="Graded Survey">Graded Survey</option>
+                    <option value="Ungraded Survey">Ungraded Survey</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Assignment Group</Form.Label>
+                  <Form.Select
+                    value={quiz.assignmentGroup}
+                    onChange={(e) => setQuiz({ ...quiz, assignmentGroup: e.target.value })}
+                  >
+                    <option value="Quizzes">Quizzes</option>
+                    <option value="Exams">Exams</option>
+                    <option value="Assignments">Assignments</option>
+                    <option value="Project">Project</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Time Limit (minutes)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min="0"
+                    value={quiz.timeLimit || 20}
+                    onChange={(e) => setQuiz({ ...quiz, timeLimit: parseInt(e.target.value) })}
                   />
                 </Form.Group>
-              </div>
-              <div className="col-md-6">
-                <Form.Group controlId="quizUntil">
-                  <Form.Label>Available until</Form.Label>
-                  <Form.Control 
-                    type="datetime-local" 
-                    value={formData.availableUntil}
-                    onChange={(e) => handleFormChange("availableUntil", e.target.value)}
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Points</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min="0"
+                    value={quiz.points || 100}
+                    onChange={(e) => setQuiz({ ...quiz, points: parseInt(e.target.value) })}
                   />
                 </Form.Group>
-              </div>
-            </div>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Multiple Attempts</Form.Label>
+                  <Form.Check
+                    type="switch"
+                    checked={quiz.multipleAttempts}
+                    onChange={(e) => setQuiz({ ...quiz, multipleAttempts: e.target.checked })}
+                    label="Allow multiple attempts"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                {quiz.multipleAttempts && (
+                  <Form.Group className="mb-3">
+                    <Form.Label>Number of Attempts</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={quiz.attempts || 1}
+                      onChange={(e) => setQuiz({ ...quiz, attempts: parseInt(e.target.value) })}
+                    />
+                  </Form.Group>
+                )}
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Show Correct Answers</Form.Label>
+                  <Form.Select
+                    value={quiz.showCorrectAnswers}
+                    onChange={(e) => setQuiz({ ...quiz, showCorrectAnswers: e.target.value })}
+                  >
+                    <option value="never">Never</option>
+                    <option value="immediately">Immediately</option>
+                    <option value="after_due_date">After Due Date</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Access Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={quiz.accessCode || ""}
+                    onChange={(e) => setQuiz({ ...quiz, accessCode: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Due Date</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    value={quiz.dueDate || ""}
+                    onChange={(e) => setQuiz({ ...quiz, dueDate: e.target.value })}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Available From</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    value={quiz.availableFrom || ""}
+                    onChange={(e) => setQuiz({ ...quiz, availableFrom: e.target.value })}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Available Until</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    value={quiz.availableUntil || ""}
+                    onChange={(e) => setQuiz({ ...quiz, availableUntil: e.target.value })}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="switch"
+                    checked={quiz.oneQuestionAtTime}
+                    onChange={(e) => setQuiz({ ...quiz, oneQuestionAtTime: e.target.checked })}
+                    label="One Question at a Time"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="switch"
+                    checked={quiz.shuffleAnswers}
+                    onChange={(e) => setQuiz({ ...quiz, shuffleAnswers: e.target.checked })}
+                    label="Shuffle Answers"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="switch"
+                    checked={quiz.lockQuestionsAfterAnswering}
+                    onChange={(e) => setQuiz({ ...quiz, lockQuestionsAfterAnswering: e.target.checked })}
+                    label="Lock Questions After Answering"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
           </Card.Body>
         </Card>
 
@@ -345,6 +409,18 @@ export default function EditQuiz() {
             </div>
           </Card.Body>
         </Card>
+
+        <div className="d-flex justify-content-end gap-2">
+          <Button variant="secondary" onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizs`)}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit">
+            Save
+          </Button>
+          <Button variant="success" onClick={handleSaveAndPublish}>
+            Save & Publish
+          </Button>
+        </div>
       </Form>
     </div>
   );
