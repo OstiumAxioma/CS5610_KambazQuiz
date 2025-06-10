@@ -1,8 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { quizs } from "../../Database";
+import { quizs, questions } from "../../Database";
 
 const initialState = {
   quizs: quizs,
+  questions: questions,
 };
 
 const quizsSlice = createSlice({
@@ -47,6 +48,29 @@ const quizsSlice = createSlice({
     setQuizs: (state, { payload: quizs }) => {
       state.quizs = quizs;
     },
+    addQuestion: (state, { payload: question }) => {
+      const newQuestion: any = {
+        _id: question._id || new Date().getTime().toString(),
+        quizId: question.quizId,
+        type: question.type || "multiple-choice",
+        title: question.title || "New Question",
+        points: question.points || 1,
+        question: question.question || "",
+        ...question
+      };
+      state.questions = [...state.questions, newQuestion] as any;
+    },
+    deleteQuestion: (state, { payload: questionId }) => {
+      state.questions = state.questions.filter((q: any) => q._id !== questionId);
+    },
+    updateQuestion: (state, { payload: question }) => {
+      state.questions = state.questions.map((q: any) =>
+        q._id === question._id ? question : q
+      ) as any;
+    },
+    setQuestions: (state, { payload: questions }) => {
+      state.questions = questions;
+    },
   },
 });
 
@@ -56,7 +80,11 @@ export const {
   updateQuiz, 
   toggleQuizPublish,
   editQuiz,
-  setQuizs 
+  setQuizs,
+  addQuestion,
+  deleteQuestion,
+  updateQuestion,
+  setQuestions
 } = quizsSlice.actions;
 
 export default quizsSlice.reducer; 

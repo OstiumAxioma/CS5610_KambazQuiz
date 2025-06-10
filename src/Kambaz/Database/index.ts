@@ -5,6 +5,7 @@ import usersData from "./users.json";
 import enrollmentsData from "./enrollments.json";
 import quizsData from "./quizs.json";
 import quizAttemptsData from "./quizAttempts.json";
+import questionsData from "./questions.json";
 
 export const courses = [...coursesData];
 export const modules = [...modulesData];
@@ -13,3 +14,4 @@ export const users = [...usersData];
 export const enrollments = [...enrollmentsData];
 export const quizs = [...quizsData];
 export const quizAttempts = [...quizAttemptsData];
+export const questions = [...questionsData];
