@@ -198,7 +198,7 @@ export default function Quizs() {
                   </div>
                 </div>
               </div>
-              {/* 右侧操作区：Dropdown和发布/未发布图标同一行对齐，仅faculty可见 */}
+
               {currentUser?.role === "FACULTY" && (
                 <div className="d-flex align-items-center ms-2">
                   <Dropdown className="me-2">
@@ -248,7 +248,7 @@ export default function Quizs() {
         </div>
       )}
 
-      {/* Copy Quiz Modal */}
+
       <Modal show={showCopyModal} onHide={() => setShowCopyModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Copy Quiz</Modal.Title>
@@ -287,7 +287,7 @@ export default function Quizs() {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Delete Quiz</Modal.Title>

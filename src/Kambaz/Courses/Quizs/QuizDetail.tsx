@@ -5,7 +5,6 @@ import { FaEdit, FaCheckCircle, FaBan, FaEye } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleQuizPublish } from "./reducer";
 
-// Define interfaces for type checking
 interface Question {
   _id: string;
   type: string;
