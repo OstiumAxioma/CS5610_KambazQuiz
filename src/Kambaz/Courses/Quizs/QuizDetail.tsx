@@ -30,10 +30,9 @@ interface Quiz {
   availableFrom?: string;
   availableUntil?: string;
   published?: boolean;
-  questions?: number;
+  questions: Question[];
   timeLimit?: number;
   attempts?: number;
-  questionList?: Question[];
   shuffleAnswers?: boolean;
   quizType?: string;
   assignmentGroup?: string;
@@ -134,8 +133,8 @@ export default function QuizDetail() {
   const getTotalPoints = (): number => {
     if (!quiz) return 0;
     
-    if (quiz.questionList && quiz.questionList.length > 0) {
-      return quiz.questionList.reduce((sum: number, q: Question) => sum + (q.points || 0), 0);
+    if (quiz.questions && quiz.questions.length > 0) {
+      return quiz.questions.reduce((sum: number, q: Question) => sum + (q.points || 0), 0);
     }
     
     return quiz.points || 0;

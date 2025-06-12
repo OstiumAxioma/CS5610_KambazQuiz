@@ -26,7 +26,7 @@ interface Quiz {
   _id: string;
   title: string;
   course: string;
-  questionList?: Question[];
+  questions?: Question[];
 }
 
 export default function QuestionsEditor() {
@@ -39,7 +39,7 @@ export default function QuestionsEditor() {
     _id: qid || "",
     title: "",
     course: cid || "",
-    questionList: []
+    questions: []
   });
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -114,7 +114,7 @@ export default function QuestionsEditor() {
   };
 
   const handleEditQuestion = (questionId: string) => {
-    const question = quiz.questionList?.find(q => q._id === questionId);
+    const question = quiz.questions?.find(q => q._id === questionId);
     if (question) {
       setEditingQuestion(question);
     }
@@ -123,7 +123,7 @@ export default function QuestionsEditor() {
   const handleDeleteQuestion = (questionId: string) => {
     setQuiz({
       ...quiz,
-      questionList: quiz.questionList?.filter(q => q._id !== questionId)
+      questions: quiz.questions?.filter(q => q._id !== questionId)
     });
     setEditingQuestion(null);
   };
@@ -172,7 +172,7 @@ export default function QuestionsEditor() {
 
     setErrorMessage("");
 
-    const updatedQuestionList = [...(quiz.questionList || [])];
+    const updatedQuestionList = [...(quiz.questions || [])];
     const existingIndex = updatedQuestionList.findIndex(q => q._id === editingQuestion._id);
 
     if (existingIndex === -1) {
@@ -183,7 +183,7 @@ export default function QuestionsEditor() {
 
     setQuiz({
       ...quiz,
-      questionList: updatedQuestionList
+      questions: updatedQuestionList
     });
 
     setEditingQuestion(null);
@@ -267,11 +267,11 @@ export default function QuestionsEditor() {
   const handleSaveQuiz = () => {
     if (!quiz) return;
 
-    const totalPoints = quiz.questionList?.reduce((sum, q) => sum + q.points, 0) || 0;
+    const totalPoints = quiz.questions?.reduce((sum, q) => sum + q.points, 0) || 0;
 
     const updatedQuiz = {
       ...quiz,
-      questions: quiz.questionList?.length || 0,
+      questions: quiz.questions?.length || 0,
       points: totalPoints
     };
 
@@ -285,11 +285,11 @@ export default function QuestionsEditor() {
   const handleSaveAndPublish = () => {
     if (!quiz) return;
 
-    const totalPoints = quiz.questionList?.reduce((sum, q) => sum + q.points, 0) || 0;
+    const totalPoints = quiz.questions?.reduce((sum, q) => sum + q.points, 0) || 0;
 
     const updatedQuiz = {
       ...quiz,
-      questions: quiz.questionList?.length || 0,
+      questions: quiz.questions?.length || 0,
       points: totalPoints,
       published: true
     };
@@ -465,7 +465,7 @@ export default function QuestionsEditor() {
   };
 
   const renderQuestionList = () => {
-    if (!quiz.questionList?.length) {
+    if (!quiz.questions?.length) {
       return (
         <Alert variant="info">
           No questions yet. Click "Add Question" to create your first question.
@@ -475,7 +475,7 @@ export default function QuestionsEditor() {
 
     return (
       <ListGroup className="mb-4">
-        {quiz.questionList.map((question) => (
+        {quiz.questions.map((question) => (
           <ListGroup.Item 
             key={question._id}
             className="d-flex justify-content-between align-items-center"
@@ -545,9 +545,9 @@ export default function QuestionsEditor() {
 
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h5>Questions <Badge bg="secondary">{quiz.questionList?.length || 0}</Badge></h5>
+          <h5>Questions <Badge bg="secondary">{quiz.questions?.length || 0}</Badge></h5>
           <div className="text-muted">
-            Total Points: {quiz.questionList?.reduce((sum, q) => sum + q.points, 0) || 0}
+            Total Points: {quiz.questions?.reduce((sum, q) => sum + q.points, 0) || 0}
           </div>
         </div>
         <Button 

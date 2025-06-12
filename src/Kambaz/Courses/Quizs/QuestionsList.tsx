@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Button, Card, ListGroup, Badge, Modal, Form } from "react-bootstrap";
 import { FaPlus, FaEdit, FaTrash, FaQuestionCircle } from "react-icons/fa";
-import { useSelector, useDispatch } from "react-redux";
-import { addQuestion, deleteQuestion, updateQuestion } from "./reducer";
 import QuestionEditor from "./QuestionEditor";
 
 interface Question {
   _id?: string;
-  quizId: string;
   type: "multiple-choice" | "true-false" | "fill-blank";
   title: string;
   points: number;
@@ -18,21 +15,20 @@ interface Question {
 }
 
 interface QuestionsListProps {
-  quizId: string;
+  questions: Question[];
+  onAddQuestion: (q: Question) => void;
+  onEditQuestion: (q: Question) => void;
+  onDeleteQuestion: (id: string) => void;
 }
 
-export default function QuestionsList({ quizId }: QuestionsListProps) {
-  const dispatch = useDispatch();
-  const { questions = [] } = useSelector((state: any) => state.quizsReducer);
-  const quizQuestions = questions.filter((q: Question) => q.quizId === quizId);
-  
+export default function QuestionsList({ questions, onAddQuestion, onEditQuestion, onDeleteQuestion }: QuestionsListProps) {
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
   const [questionType, setQuestionType] = useState<Question["type"]>("multiple-choice");
 
-  const totalPoints = quizQuestions.reduce((sum: number, q: Question) => sum + q.points, 0);
+  const totalPoints = questions.reduce((sum: number, q: Question) => sum + q.points, 0);
 
   const handleAddQuestion = () => {
     setEditingQuestion(undefined);
@@ -47,21 +43,14 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
 
   const handleSaveQuestion = (question: Question) => {
     if (question._id && editingQuestion) {
-      // Update existing question
-      dispatch(updateQuestion({
-        ...question,
-        quizId: quizId,
-        type: editingQuestion.type
-      }));
+      onEditQuestion({ ...question, type: editingQuestion.type });
     } else {
-      // Add new question
       const newQuestion = {
         ...question,
-        quizId: quizId,
         type: questionType,
         _id: new Date().getTime().toString(),
       };
-      dispatch(addQuestion(newQuestion));
+      onAddQuestion(newQuestion);
     }
     setShowEditor(false);
     setEditingQuestion(undefined);
@@ -74,7 +63,7 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
 
   const confirmDelete = () => {
     if (questionToDelete) {
-      dispatch(deleteQuestion(questionToDelete._id));
+      onDeleteQuestion(questionToDelete._id!);
       setShowDeleteModal(false);
       setQuestionToDelete(null);
     }
@@ -125,7 +114,6 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
         </div>
         <QuestionEditor
           question={editingQuestion}
-          quizId={quizId}
           type={questionType}
           onSave={handleSaveQuestion}
           onCancel={() => {
@@ -143,7 +131,7 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
         <div>
           <h4>Questions</h4>
           <p className="text-muted mb-0">
-            Total Points: <strong>{totalPoints}</strong> | Total Questions: <strong>{quizQuestions.length}</strong>
+            Total Points: <strong>{totalPoints}</strong> | Total Questions: <strong>{questions.length}</strong>
           </p>
         </div>
         <Button variant="primary" onClick={handleAddQuestion}>
@@ -152,7 +140,7 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
         </Button>
       </div>
 
-      {quizQuestions.length === 0 ? (
+      {questions.length === 0 ? (
         <Card className="text-center p-5">
           <Card.Body>
             <FaQuestionCircle className="text-muted mb-3" size={48} />
@@ -166,7 +154,7 @@ export default function QuestionsList({ quizId }: QuestionsListProps) {
         </Card>
       ) : (
         <ListGroup>
-          {quizQuestions.map((question: Question, index: number) => (
+          {questions.map((question: Question, index: number) => (
             <ListGroup.Item key={question._id} className="d-flex justify-content-between align-items-start">
               <div className="flex-grow-1">
                 <div className="d-flex align-items-center mb-2">

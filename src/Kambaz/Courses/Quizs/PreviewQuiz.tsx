@@ -29,9 +29,9 @@ interface Quiz {
   points?: number;
   timeLimit?: number;
   attempts?: number;
-  questionList: Question[];
+  questions: Question[];
   shuffleAnswers?: boolean;
-  questionCount: number;
+  questionCount?: number;
   published: boolean;
   dueDate: string;
   availableFrom: string;
@@ -80,11 +80,9 @@ export default function PreviewQuiz() {
   useEffect(() => {
     const foundQuiz = quizs.find((q: Quiz) => q._id === qid);
     if (foundQuiz) {
-      const quizQuestions = questions.filter((q: Question) => q.quizId === qid);
       setQuiz({
         ...foundQuiz,
-        questionList: quizQuestions,
-        questionCount: quizQuestions.length
+        questionCount: foundQuiz.questions.length
       });
 
       if (isStudent) {
@@ -174,7 +172,7 @@ export default function PreviewQuiz() {
         }
       }
     }
-  }, [quizs, questions, qid, isStudent, isFaculty, currentUser, quizAttempts, location]);
+  }, [qid, quizs, questions, isStudent, quizAttempts, currentUser, location]);
 
   useEffect(() => {
     if (timeLeft === null || isSubmitted) return;
@@ -235,7 +233,7 @@ export default function PreviewQuiz() {
 
   const handleNextQuestion = () => {
     if (!quiz) return;
-    if (currentQuestionIndex < quiz.questionList.length - 1) {
+    if (currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -275,7 +273,7 @@ export default function PreviewQuiz() {
       isCorrect: boolean;
     }[] = [];
     
-    for (const question of quiz.questionList) {
+    for (const question of quiz.questions) {
       totalPoints += question.points;
       
       const userAnswer = answers[question._id] || "";
@@ -353,7 +351,7 @@ export default function PreviewQuiz() {
 
   const renderQuestion = () => {
     if (!quiz) return null;
-    const question = quiz.questionList[currentQuestionIndex];
+    const question = quiz.questions[currentQuestionIndex];
     if (!question) return null;
 
     const userAnswer = answers[question._id] || "";
@@ -520,7 +518,7 @@ export default function PreviewQuiz() {
           <FaArrowLeft /> Previous
         </Button>
         
-        {currentQuestionIndex < quiz.questionList.length - 1 ? (
+        {currentQuestionIndex < quiz.questions.length - 1 ? (
           <Button
             variant="outline-primary"
             onClick={handleNextQuestion}
@@ -575,7 +573,7 @@ export default function PreviewQuiz() {
           </Card>
         )}
         <div className="d-flex justify-content-center mb-4">
-          {quiz.questionList.map((q, idx) => (
+          {quiz.questions.map((q, idx) => (
             <Button
               key={q._id}
               variant={idx === currentQuestionIndex ? "primary" : "outline-primary"}
@@ -729,7 +727,7 @@ export default function PreviewQuiz() {
       )}
       {renderQuestion()}
       <div className="d-flex justify-content-center mb-4">
-        {quiz.questionList.map((q, idx) => (
+        {quiz.questions.map((q, idx) => (
           <Button
             key={q._id}
             variant={idx === currentQuestionIndex ? "primary" : "outline-primary"}

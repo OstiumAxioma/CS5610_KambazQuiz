@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaPlus, FaCheckCircle, FaTrash, FaEdit, FaBan, FaEllipsisV, FaCopy } from "react-icons/fa";
 import { BsQuestionCircle } from "react-icons/bs";
 import { Button, Modal, Dropdown, Form } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteQuiz, addQuiz, toggleQuizPublish } from "./reducer";
+import { deleteQuiz, addQuiz, toggleQuizPublish, setQuizs } from "./reducer";
+import { API_BASE_URL } from '../../../config';
 
 interface Quiz {
   _id: string;
@@ -16,7 +17,7 @@ interface Quiz {
   availableFrom?: string;
   availableUntil?: string;
   published?: boolean;
-  questions?: number;
+  questions?: any[];
   timeLimit?: number;
   attempts?: number;
 }
@@ -27,7 +28,7 @@ export default function Quizs() {
   const dispatch = useDispatch();
   const { quizs } = useSelector((state: any) => state.quizsReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
-  const { courses } = useSelector((state: any) => state.coursesReducer);
+  const { courses } = useSelector((state: any) => state.coursesReducer || { courses: [] });
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
@@ -36,6 +37,25 @@ export default function Quizs() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "dueDate" | "availableDate">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  useEffect(() => {
+    if (!cid) return;
+    // Fetch quizzes from backend API
+    fetch(`${API_BASE_URL}/api/courses/${cid}/quizzes`)
+      .then(res => res.json())
+      .then(data => {
+        // No mapping to questionList, just use questions
+        const quizzes = data.map((quiz: any) => ({
+          ...quiz,
+          questions: Array.isArray(quiz.questions) ? quiz.questions : [],
+        }));
+        dispatch(setQuizs(quizzes));
+      })
+      .catch(err => {
+        console.error('Failed to fetch quizzes:', err);
+        dispatch(setQuizs([]));
+      });
+  }, [cid, dispatch]);
 
   // 获取当前课程的测验列表
   const courseQuizs = quizs.filter((quiz: Quiz) => {
@@ -193,7 +213,7 @@ export default function Quizs() {
                       {" "}Due {formatDate(quiz.dueDate)}
                     </div>
                     <div className="small text-muted">
-                      {quiz.points || 0} pts | {quiz.questions || 0} Question{quiz.questions !== 1 ? 's' : ''}
+                      {quiz.points || 0} pts | {(quiz.questions?.length ?? 0)} Question{(quiz.questions?.length !== 1 ? 's' : '')}
                     </div>
                   </div>
                 </div>

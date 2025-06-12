@@ -3,8 +3,8 @@ import type { ChangeEvent, KeyboardEvent } from "react";
 import { Form, Button, Card, Badge, CloseButton, Alert, Row, Col, Tabs, Tab } from "react-bootstrap";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { addQuiz, updateQuiz } from "./reducer";
 import QuestionsList from "./QuestionsList";
+import { API_BASE_URL } from '../../../config';
 
 interface Quiz {
   _id: string;
@@ -16,7 +16,7 @@ interface Quiz {
   availableFrom?: string;
   availableUntil?: string;
   published?: boolean;
-  questions?: number;
+  questions: any[];
   timeLimit?: number;
   attempts?: number;
   quizType?: string;
@@ -48,7 +48,7 @@ export default function EditQuiz() {
     availableFrom: "",
     availableUntil: "",
     published: false,
-    questions: 0,
+    questions: [],
     timeLimit: 0,
     attempts: 1,
     quizType: "practice_quiz",
@@ -85,7 +85,7 @@ export default function EditQuiz() {
         availableFrom: "",
         availableUntil: "",
         published: false,
-        questions: 0,
+        questions: [],
         timeLimit: 20,
         attempts: 1,
         quizType: "Graded Quiz",
@@ -117,28 +117,90 @@ export default function EditQuiz() {
     setAssignees(assignees.filter((a) => a !== name));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (qid) {
-      dispatch(updateQuiz(quiz));
+      // Update quiz via backend API
+      const response = await fetch(`${API_BASE_URL}/api/quizzes/${qid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quiz),
+      });
+      if (response.ok) {
+        navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}`);
+      } else {
+        alert('Failed to update quiz');
+      }
     } else {
-      dispatch(addQuiz(quiz));
+      // Create new quiz via backend API
+      const response = await fetch(`${API_BASE_URL}/api/courses/${cid}/quizzes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quiz),
+      });
+      if (response.ok) {
+        navigate(`/Kambaz/Courses/${cid}/Quizs`);
+      } else {
+        alert('Failed to create quiz');
+      }
     }
-    navigate(`/Kambaz/Courses/${cid}/Quizs/${quiz._id}`);
   };
 
-  const handleSaveAndPublish = () => {
+  const handleSaveAndPublish = async () => {
     const publishedQuiz = { ...quiz, published: true };
     if (qid) {
-      dispatch(updateQuiz(publishedQuiz));
+      // Update quiz via backend API
+      const response = await fetch(`${API_BASE_URL}/api/quizzes/${qid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(publishedQuiz),
+      });
+      if (response.ok) {
+        navigate(`/Kambaz/Courses/${cid}/Quizs`);
+      } else {
+        alert('Failed to update quiz');
+      }
     } else {
-      dispatch(addQuiz(publishedQuiz));
+      // Create new published quiz via backend API
+      const response = await fetch(`${API_BASE_URL}/api/courses/${cid}/quizzes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(publishedQuiz),
+      });
+      if (response.ok) {
+        navigate(`/Kambaz/Courses/${cid}/Quizs`);
+      } else {
+        alert('Failed to create quiz');
+      }
     }
-    navigate(`/Kambaz/Courses/${cid}/Quizs`);
   };
 
   const handleCancel = () => {
     navigate(`/Kambaz/Courses/${cid}/Quizs`);
+  };
+
+  // Handler to add a question
+  const handleAddQuestion = (newQuestion: any) => {
+    setQuiz(prevQuiz => ({
+      ...prevQuiz,
+      questions: [...(prevQuiz.questions || []), newQuestion]
+    }));
+  };
+
+  // Handler to edit a question
+  const handleEditQuestion = (updatedQuestion: any) => {
+    setQuiz(prevQuiz => ({
+      ...prevQuiz,
+      questions: (prevQuiz.questions || []).map(q => q._id === updatedQuestion._id ? updatedQuestion : q)
+    }));
+  };
+
+  // Handler to delete a question
+  const handleDeleteQuestion = (questionId: string) => {
+    setQuiz(prevQuiz => ({
+      ...prevQuiz,
+      questions: (prevQuiz.questions || []).filter(q => q._id !== questionId)
+    }));
   };
 
   if (!canEdit) {
@@ -404,13 +466,12 @@ export default function EditQuiz() {
         </Tab>
         
         <Tab eventKey="questions" title="Questions">
-          {!isNewQuiz && qid ? (
-            <QuestionsList quizId={qid} />
-          ) : (
-            <div className="text-center text-muted py-5">
-              <p>Please save the quiz details first before adding questions.</p>
-            </div>
-          )}
+          <QuestionsList
+            questions={Array.isArray(quiz.questions) ? quiz.questions : []}
+            onAddQuestion={handleAddQuestion}
+            onEditQuestion={handleEditQuestion}
+            onDeleteQuestion={handleDeleteQuestion}
+          />
         </Tab>
       </Tabs>
     </div>

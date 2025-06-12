@@ -28,7 +28,7 @@ interface Quiz {
   points?: number;
   timeLimit?: number;
   attempts?: number;
-  questionList: Question[];
+  questions: Question[];
   shuffleAnswers?: boolean;
   questionCount?: number;
 }
@@ -53,8 +53,8 @@ const quizsSlice = createSlice({
         availableFrom: quiz.availableFrom || "",
         availableUntil: quiz.availableUntil || "",
         published: quiz.published || false,
-        questionList: quiz.questionList || [],
-        questionCount: quiz.questionList ? quiz.questionList.length : 0,
+        questions: quiz.questions || [],
+        questionCount: quiz.questions ? quiz.questions.length : 0,
         timeLimit: quiz.timeLimit || 60,
         attempts: quiz.attempts || 1,
       };

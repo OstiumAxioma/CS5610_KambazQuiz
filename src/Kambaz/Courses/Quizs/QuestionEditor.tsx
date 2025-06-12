@@ -4,7 +4,6 @@ import { FaTrash, FaPlus } from "react-icons/fa";
 
 interface Question {
   _id?: string;
-  quizId: string;
   type: "multiple-choice" | "true-false" | "fill-blank";
   title: string;
   points: number;
@@ -16,15 +15,13 @@ interface Question {
 
 interface QuestionEditorProps {
   question?: Question;
-  quizId: string;
   type: "multiple-choice" | "true-false" | "fill-blank";
   onSave: (question: Question) => void;
   onCancel: () => void;
 }
 
-export default function QuestionEditor({ question, quizId, type, onSave, onCancel }: QuestionEditorProps) {
+export default function QuestionEditor({ question, type, onSave, onCancel }: QuestionEditorProps) {
   const [formData, setFormData] = useState<Question>({
-    quizId,
     type,
     title: "",
     points: 1,
@@ -155,7 +152,6 @@ export default function QuestionEditor({ question, quizId, type, onSave, onCance
     const questionToSave: Question = {
       ...formData,
       _id: question?._id || new Date().getTime().toString(),
-      quizId: quizId
     };
 
     onSave(questionToSave);
