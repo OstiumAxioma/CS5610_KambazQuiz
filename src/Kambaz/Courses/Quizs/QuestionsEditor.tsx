@@ -15,9 +15,9 @@ interface Question {
   title: string;
   type: "multiple_choice" | "true_false" | "fill_in_blank";
   points: number;
-  questionText: string;
+  question: string;
   correctOption?: string;
-  options?: Option[];
+  choices?: Option[];
   correctAnswer?: boolean;
   possibleAnswers?: string[];
 }
@@ -66,7 +66,7 @@ export default function QuestionsEditor() {
     if (type === "multiple_choice") {
       updatedQuestion = {
         ...updatedQuestion,
-        options: [
+        choices: [
           { id: "option1", text: "" },
           { id: "option2", text: "" }
         ],
@@ -77,7 +77,7 @@ export default function QuestionsEditor() {
     } else if (type === "true_false") {
       updatedQuestion = {
         ...updatedQuestion,
-        options: undefined,
+        choices: undefined,
         correctOption: undefined,
         correctAnswer: true,
         possibleAnswers: undefined
@@ -85,7 +85,7 @@ export default function QuestionsEditor() {
     } else {
       updatedQuestion = {
         ...updatedQuestion,
-        options: undefined,
+        choices: undefined,
         correctOption: undefined,
         correctAnswer: undefined,
         possibleAnswers: [""]
@@ -101,8 +101,8 @@ export default function QuestionsEditor() {
       type: questionType,
       title: "New Question",
       points: 10,
-      questionText: "",
-      options: questionType === "multiple_choice" ? [
+      question: "",
+      choices: questionType === "multiple_choice" ? [
         { id: "option1", text: "" },
         { id: "option2", text: "" }
       ] : undefined,
@@ -136,18 +136,18 @@ export default function QuestionsEditor() {
       return;
     }
 
-    if (!editingQuestion.questionText.trim()) {
+    if (!editingQuestion.question.trim()) {
       setErrorMessage("Please enter question text");
       return;
     }
 
     if (editingQuestion.type === "multiple_choice") {
-      if (!editingQuestion.options || editingQuestion.options.length < 2) {
+      if (!editingQuestion.choices || editingQuestion.choices.length < 2) {
         setErrorMessage("Please add at least two options");
         return;
       }
 
-      if (editingQuestion.options.some(opt => !opt.text.trim())) {
+      if (editingQuestion.choices.some(opt => !opt.text.trim())) {
         setErrorMessage("Please fill in all option texts");
         return;
       }
@@ -195,36 +195,36 @@ export default function QuestionsEditor() {
   };
 
   const handleAddOption = () => {
-    if (!editingQuestion?.options) return;
+    if (!editingQuestion?.choices) return;
 
-    const newOptionId = `option${editingQuestion.options.length + 1}`;
+    const newOptionId = `option${editingQuestion.choices.length + 1}`;
     setEditingQuestion({
       ...editingQuestion,
-      options: [...editingQuestion.options, { id: newOptionId, text: "" }]
+      choices: [...editingQuestion.choices, { id: newOptionId, text: "" }]
     });
   };
 
   const handleRemoveOption = (optionId: string) => {
-    if (!editingQuestion?.options) return;
+    if (!editingQuestion?.choices) return;
 
-    if (editingQuestion.options.length <= 2) {
+    if (editingQuestion.choices.length <= 2) {
       setErrorMessage("Multiple choice questions must have at least 2 options");
       return;
     }
 
     setEditingQuestion({
       ...editingQuestion,
-      options: editingQuestion.options.filter(opt => opt.id !== optionId),
-      correctOption: editingQuestion.correctOption === optionId ? editingQuestion.options[0].id : editingQuestion.correctOption
+      choices: editingQuestion.choices.filter(opt => opt.id !== optionId),
+      correctOption: editingQuestion.correctOption === optionId ? editingQuestion.choices[0].id : editingQuestion.correctOption
     });
   };
 
   const handleOptionTextChange = (optionId: string, text: string) => {
-    if (!editingQuestion?.options) return;
+    if (!editingQuestion?.choices) return;
 
     setEditingQuestion({
       ...editingQuestion,
-      options: editingQuestion.options.map(opt =>
+      choices: editingQuestion.choices.map(opt =>
         opt.id === optionId ? { ...opt, text } : opt
       )
     });
@@ -348,8 +348,8 @@ export default function QuestionsEditor() {
               <Form.Control
                 as="textarea"
                 rows={3}
-                value={editingQuestion.questionText}
-                onChange={(e) => setEditingQuestion({...editingQuestion, questionText: e.target.value})}
+                value={editingQuestion.question}
+                onChange={(e) => setEditingQuestion({...editingQuestion, question: e.target.value})}
                 placeholder="Enter your question here..."
               />
             </Form.Group>
@@ -364,7 +364,7 @@ export default function QuestionsEditor() {
                   </Button>
                 </div>
 
-                {editingQuestion.options?.map((option) => (
+                {editingQuestion.choices?.map((option) => (
                   <div key={option.id} className="d-flex align-items-center mb-2">
                     <Form.Check
                       type="radio"

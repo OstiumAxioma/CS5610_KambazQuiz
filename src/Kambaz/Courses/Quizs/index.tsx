@@ -85,16 +85,50 @@ export default function Quizs() {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteQuiz = () => {
+  const confirmDeleteQuiz = async () => {
     if (quizToDelete) {
-      dispatch(deleteQuiz(quizToDelete._id));
-      setShowDeleteModal(false);
-      setQuizToDelete(null);
+      try {
+        // Delete quiz via backend API
+        const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizToDelete._id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (response.ok) {
+          // Only update local state after successful API call
+          dispatch(deleteQuiz(quizToDelete._id));
+          setShowDeleteModal(false);
+          setQuizToDelete(null);
+        } else {
+          alert('Failed to delete quiz');
+        }
+      } catch (error) {
+        console.error('Error deleting quiz:', error);
+        alert('Failed to delete quiz');
+      }
     }
   };
 
-  const handlePublishToggle = (quiz: Quiz) => {
-    dispatch(toggleQuizPublish(quiz._id));
+  const handlePublishToggle = async (quiz: Quiz) => {
+    try {
+      // Toggle publish status via backend API
+      const updatedQuiz = { ...quiz, published: !quiz.published };
+      const response = await fetch(`${API_BASE_URL}/api/quizzes/${quiz._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedQuiz),
+      });
+      
+      if (response.ok) {
+        // Only update local state after successful API call
+        dispatch(toggleQuizPublish(quiz._id));
+      } else {
+        alert('Failed to update quiz publish status');
+      }
+    } catch (error) {
+      console.error('Error updating quiz publish status:', error);
+      alert('Failed to update quiz publish status');
+    }
   };
 
   const handleCopyQuiz = (quiz: Quiz) => {

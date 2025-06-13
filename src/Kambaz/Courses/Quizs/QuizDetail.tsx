@@ -6,14 +6,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { toggleQuizPublish } from "./reducer";
 import { fetchQuizAttemptsAsync } from "./quizAttemptsReducer";
 import type { AppDispatch } from "../../store";
+import { API_BASE_URL } from '../../../config';
 
 interface Question {
   _id: string;
-  type: string;
+  type: "multiple_choice" | "true_false" | "fill_in_blank";
   title: string;
-  questionText: string;
+  question: string;
   points: number;
-  options?: {
+  choices?: {
     id: string;
     text: string;
   }[];
@@ -131,9 +132,27 @@ export default function QuizDetail() {
 
   }, [currentUser, qid, quizAttempts]);
 
-  const handlePublishToggle = () => {
+  const handlePublishToggle = async () => {
     if (quiz) {
-      dispatch(toggleQuizPublish(quiz._id));
+      try {
+        // Toggle publish status via backend API
+        const updatedQuiz = { ...quiz, published: !quiz.published };
+        const response = await fetch(`${API_BASE_URL}/api/quizzes/${quiz._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedQuiz),
+        });
+        
+        if (response.ok) {
+          // Only update local state after successful API call
+          dispatch(toggleQuizPublish(quiz._id));
+        } else {
+          alert('Failed to update quiz publish status');
+        }
+      } catch (error) {
+        console.error('Error updating quiz publish status:', error);
+        alert('Failed to update quiz publish status');
+      }
     }
   };
 

@@ -5,11 +5,12 @@ import QuestionEditor from "./QuestionEditor";
 
 interface Question {
   _id?: string;
-  type: "multiple-choice" | "true-false" | "fill-blank";
+  type: "multiple_choice" | "true_false" | "fill_in_blank";
   title: string;
   points: number;
   question: string;
-  choices?: { text: string; correct: boolean }[];
+  choices?: { id: string; text: string }[];
+  correctOption?: string;
   correctAnswer?: boolean;
   possibleAnswers?: string[];
 }
@@ -26,7 +27,7 @@ export default function QuestionsList({ questions, onAddQuestion, onEditQuestion
   const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
-  const [questionType, setQuestionType] = useState<Question["type"]>("multiple-choice");
+  const [questionType, setQuestionType] = useState<Question["type"]>("multiple_choice");
 
   const totalPoints = questions.reduce((sum: number, q: Question) => sum + q.points, 0);
 
@@ -71,12 +72,12 @@ export default function QuestionsList({ questions, onAddQuestion, onEditQuestion
 
   const getQuestionTypeLabel = (type: string) => {
     switch (type) {
-      case "multiple-choice":
-        return "Multiple Choice";
-      case "true-false":
-        return "True/False";
-      case "fill-blank":
-        return "Fill in the Blank";
+          case "multiple_choice":
+      return "Multiple Choice";
+    case "true_false":
+      return "True/False";
+    case "fill_in_blank":
+      return "Fill in the Blank";
       default:
         return type;
     }
@@ -84,11 +85,11 @@ export default function QuestionsList({ questions, onAddQuestion, onEditQuestion
 
   const getQuestionTypeColor = (type: string) => {
     switch (type) {
-      case "multiple-choice":
+      case "multiple_choice":
         return "primary";
-      case "true-false":
+      case "true_false":
         return "success";
-      case "fill-blank":
+      case "fill_in_blank":
         return "warning";
       default:
         return "secondary";
@@ -106,9 +107,9 @@ export default function QuestionsList({ questions, onAddQuestion, onEditQuestion
               onChange={(e) => setQuestionType(e.target.value as Question["type"])}
               className="w-auto"
             >
-              <option value="multiple-choice">Multiple Choice</option>
-              <option value="true-false">True/False</option>
-              <option value="fill-blank">Fill in the Blank</option>
+                                      <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="fill_in_blank">Fill in the Blank</option>
             </Form.Select>
           )}
         </div>
@@ -172,14 +173,14 @@ export default function QuestionsList({ questions, onAddQuestion, onEditQuestion
                     ? `${question.question.substring(0, 100)}...` 
                     : question.question}
                 </div>
-                {question.type === "multiple-choice" && question.choices && (
+                                        {question.type === "multiple_choice" && question.choices && (
                   <div className="mt-2">
                     <small className="text-muted">
                       {question.choices.length} choices
                     </small>
                   </div>
                 )}
-                {question.type === "fill-blank" && question.possibleAnswers && (
+                {question.type === "fill_in_blank" && question.possibleAnswers && (
                   <div className="mt-2">
                     <small className="text-muted">
                       {question.possibleAnswers.length} possible answers

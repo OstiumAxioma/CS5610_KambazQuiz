@@ -9,7 +9,7 @@ import type { AppDispatch } from "../../store";
 
 interface Question {
   _id: string;
-  type: "multiple-choice" | "true-false" | "fill-blank";
+  type: "multiple_choice" | "true_false" | "fill_in_blank";
   title: string;
   question: string;
   points: number;
@@ -319,13 +319,12 @@ export default function PreviewQuiz() {
         const userAnswer = answers[question._id] || "";
         let isCorrect = false;
         
-        if (question.type === "multiple-choice") {
-          const correctChoice = question.choices?.find(choice => choice.id === question.correctOption);
-          isCorrect = userAnswer === correctChoice?.text;
-        } else if (question.type === "true-false") {
+        if (question.type === "multiple_choice") {
+          isCorrect = userAnswer === question.correctOption;
+        } else if (question.type === "true_false") {
           isCorrect = (userAnswer === "true" && question.correctAnswer === true) || 
                      (userAnswer === "false" && question.correctAnswer === false);
-        } else if (question.type === "fill-blank") {
+        } else if (question.type === "fill_in_blank") {
           isCorrect = (question.possibleAnswers || []).some(
             answer => answer.toLowerCase() === userAnswer.toLowerCase()
           );
@@ -429,13 +428,12 @@ export default function PreviewQuiz() {
     if (isSubmitted) {
       if (isFaculty) {
         // Faculty can see correct answers immediately (for preview)
-        if (question.type === "multiple-choice") {
-          const correctChoice = question.choices?.find(choice => choice.id === question.correctOption);
-          isCorrect = userAnswer === correctChoice?.text;
-        } else if (question.type === "true-false") {
+        if (question.type === "multiple_choice") {
+          isCorrect = userAnswer === question.correctOption;
+        } else if (question.type === "true_false") {
           isCorrect = (userAnswer === "true" && question.correctAnswer === true) || 
                      (userAnswer === "false" && question.correctAnswer === false);
-        } else if (question.type === "fill-blank") {
+        } else if (question.type === "fill_in_blank") {
           isCorrect = (question.possibleAnswers || []).some(
             answer => answer.toLowerCase() === userAnswer.toLowerCase()
           );
@@ -467,7 +465,7 @@ export default function PreviewQuiz() {
               <div dangerouslySetInnerHTML={{ __html: question.question }} />
             </Form.Group>
 
-            {question.type === "multiple-choice" && (
+            {question.type === "multiple_choice" && (
               <Form.Group>
                 {question.choices?.map((choice, index) => (
                   <Form.Check
@@ -476,29 +474,37 @@ export default function PreviewQuiz() {
                     id={`q${question._id}-${index}`}
                     label={choice.text}
                     name={`question-${question._id}`}
-                    checked={userAnswer === choice.text}
-                    onChange={() => handleAnswerChange(question._id, choice.text)}
+                    checked={userAnswer === choice.id}
+                    onChange={() => handleAnswerChange(question._id, choice.id)}
                     disabled={isSubmitted}
                     className={isSubmitted && (isFaculty || shouldShowCorrectAnswers()) ? (
                       choice.id === question.correctOption ? "text-success fw-bold" : 
-                      userAnswer === choice.text ? "text-danger" : ""
+                      userAnswer === choice.id ? "text-danger" : ""
                     ) : ""}
                   />
                 ))}
                 {isSubmitted && (isFaculty || shouldShowCorrectAnswers()) && (
                   <div className="mt-3">
-                    <div className="text-success">
-                      <strong>Your answer: </strong> {userAnswer || "No answer provided"}
+                    <div className="text-info">
+                      <strong>Your answer: </strong> 
+                      {userAnswer ? 
+                        (question.choices?.find(c => c.id === userAnswer)?.text || `Unknown choice (${userAnswer})`) : 
+                        "No answer provided"
+                      }
                     </div>
                     <div className="text-success">
-                      <strong>Correct answer: </strong> {question.choices?.find(c => c.id === question.correctOption)?.text}
+                      <strong>Correct answer: </strong> 
+                      {question.correctOption ? 
+                        (question.choices?.find(c => c.id === question.correctOption)?.text || `Unknown choice (${question.correctOption})`) : 
+                        "No correct answer set"
+                      }
                     </div>
                   </div>
                 )}
               </Form.Group>
             )}
 
-            {question.type === "true-false" && (
+            {question.type === "true_false" && (
               <Form.Group>
                 <Form.Check
                   type="radio"
@@ -539,7 +545,7 @@ export default function PreviewQuiz() {
               </Form.Group>
             )}
 
-            {question.type === "fill-blank" && (
+            {question.type === "fill_in_blank" && (
               <Form.Group>
                 <Form.Control
                   type="text"
