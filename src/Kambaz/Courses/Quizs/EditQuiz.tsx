@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Form, Button, Card, Badge, CloseButton, Alert, Row, Col, Tabs, Tab } from "react-bootstrap";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import QuestionsList from "./QuestionsList";
 import { API_BASE_URL } from '../../../config';
 
@@ -33,7 +33,7 @@ interface Quiz {
 export default function EditQuiz() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { quizs } = useSelector((state: any) => state.quizsReducer);
   const [assignees, setAssignees] = useState<string[]>(["Everyone"]);

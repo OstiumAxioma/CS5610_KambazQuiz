@@ -39,9 +39,12 @@ export default function Quizs() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
-    if (!cid) return;
-    // Fetch quizzes from backend API
-    fetch(`${API_BASE_URL}/api/courses/${cid}/quizzes`)
+    if (!cid || !currentUser) return;
+    // Fetch quizzes from backend API with role-based filtering
+    const url = new URL(`${API_BASE_URL}/api/courses/${cid}/quizzes`);
+    url.searchParams.append('role', currentUser.role);
+    
+    fetch(url.toString())
       .then(res => res.json())
       .then(data => {
         // No mapping to questionList, just use questions
@@ -55,15 +58,10 @@ export default function Quizs() {
         console.error('Failed to fetch quizzes:', err);
         dispatch(setQuizs([]));
       });
-  }, [cid, dispatch]);
+  }, [cid, currentUser, dispatch]);
 
-  // 获取当前课程的测验列表
-  const courseQuizs = quizs.filter((quiz: Quiz) => {
-    if (currentUser?.role === "STUDENT") {
-      return quiz.course === cid && quiz.published;
-    }
-    return quiz.course === cid;
-  });
+  // 获取当前课程的测验列表 (backend already filters by role)
+  const courseQuizs = quizs.filter((quiz: Quiz) => quiz.course === cid);
 
   // 排序测验列表
   const sortedQuizs = [...courseQuizs].sort((a, b) => {
