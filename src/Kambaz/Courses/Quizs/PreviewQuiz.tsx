@@ -387,7 +387,23 @@ export default function PreviewQuiz() {
 
 
   const shouldShowCorrectAnswers = (): boolean => {
-    if (!quiz || !quiz.showCorrectAnswers) return false;
+    if (!quiz) return false;
+    
+    // For students: Check if they have used all their attempts
+    if (isStudent && currentUser) {
+      const completedUserAttempts = quizAttempts.filter((a: QuizAttempt) => 
+        a.quiz === qid && a.user === currentUser._id && a.endTime
+      );
+      const maxAttempts = quiz.attempts || 1;
+      
+      // If student has used all attempts, show correct answers regardless of quiz setting
+      if (completedUserAttempts.length >= maxAttempts) {
+        return true;
+      }
+    }
+    
+    // Otherwise, follow the quiz's showCorrectAnswers setting
+    if (!quiz.showCorrectAnswers) return false;
     
     switch (quiz.showCorrectAnswers) {
       case "immediately":

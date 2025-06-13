@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Form, Button, Card, Badge, CloseButton, Alert, Row, Col, Tabs, Tab } from "react-bootstrap";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { updateQuiz } from "./reducer";
 import QuestionsList from "./QuestionsList";
 import { API_BASE_URL } from '../../../config';
 
@@ -33,6 +34,7 @@ interface Quiz {
 export default function EditQuiz() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { quizs } = useSelector((state: any) => state.quizsReducer);
@@ -127,6 +129,9 @@ export default function EditQuiz() {
         body: JSON.stringify(quiz),
       });
       if (response.ok) {
+        const updatedQuiz = await response.json();
+        // Update Redux store with the latest data from backend
+        dispatch(updateQuiz(updatedQuiz));
         navigate(`/Kambaz/Courses/${cid}/Quizs/${qid}`);
       } else {
         alert('Failed to update quiz');
@@ -156,6 +161,9 @@ export default function EditQuiz() {
         body: JSON.stringify(publishedQuiz),
       });
       if (response.ok) {
+        const updatedQuiz = await response.json();
+        // Update Redux store with the latest data from backend
+        dispatch(updateQuiz(updatedQuiz));
         navigate(`/Kambaz/Courses/${cid}/Quizs`);
       } else {
         alert('Failed to update quiz');
