@@ -35,7 +35,7 @@ export default function Quizs() {
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [quizToCopy, setQuizToCopy] = useState<Quiz | null>(null);
   const [selectedCourse, setSelectedCourse] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "dueDate" | "availableDate">("name");
+  const [sortBy, setSortBy] = useState<"name" | "dueDate" | "availableDate">("availableDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {

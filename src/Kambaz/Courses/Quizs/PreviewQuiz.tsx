@@ -763,6 +763,11 @@ export default function PreviewQuiz() {
               <div><strong>Points:</strong> {quiz.points}</div>
               <div><strong>Questions:</strong> {quiz.questionCount}</div>
             </div>
+            {quiz.dueDate && (
+              <div className="mb-3">
+                <strong>Due Date:</strong> {new Date(quiz.dueDate).toLocaleString()}
+              </div>
+            )}
             <div className="mb-3">
               <strong>Attempts allowed:</strong> {quiz.attempts || 1}
             </div>

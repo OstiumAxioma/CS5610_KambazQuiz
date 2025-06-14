@@ -144,7 +144,9 @@ export default function EditQuiz() {
         body: JSON.stringify(quiz),
       });
       if (response.ok) {
-        navigate(`/Kambaz/Courses/${cid}/Quizs`);
+        const newQuiz = await response.json();
+        // Navigate to the new quiz's details page
+        navigate(`/Kambaz/Courses/${cid}/Quizs/${newQuiz._id}`);
       } else {
         alert('Failed to create quiz');
       }
@@ -300,13 +302,30 @@ export default function EditQuiz() {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Time Limit (minutes)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        min="0"
-                        value={quiz.timeLimit || 20}
-                        onChange={(e) => setQuiz({ ...quiz, timeLimit: parseInt(e.target.value) })}
+                      <Form.Check
+                        type="switch"
+                        checked={quiz.timeLimit !== undefined && quiz.timeLimit > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setQuiz({ ...quiz, timeLimit: 20 });
+                          } else {
+                            setQuiz({ ...quiz, timeLimit: 0 });
+                          }
+                        }}
+                        label="Enable Time Limit"
+                        className="mb-2"
                       />
+                      {quiz.timeLimit !== undefined && quiz.timeLimit > 0 && (
+                        <div>
+                          <Form.Label>Time Limit (minutes)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            min="1"
+                            value={quiz.timeLimit}
+                            onChange={(e) => setQuiz({ ...quiz, timeLimit: parseInt(e.target.value) })}
+                          />
+                        </div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={6}>
